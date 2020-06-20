@@ -27,15 +27,6 @@ function metaconcord.connect()
         return
     end
 
-    timer.Create("metaconcord.heartbeat", 10, 0, function()
-        if metaconcord.socket and metaconcord.socket:isConnected() then
-            metaconcord.socket:write("") -- heartbeat LOL
-        else
-            metaconcord.print("Lost connection, reconnecting...")
-            init()
-        end
-    end)
-
     local socket = GWSockets.createWebSocket("ws://127.0.0.1:3000/")
     socket:setHeader("X-Auth-Token", token)
 
@@ -52,11 +43,20 @@ function metaconcord.connect()
     end
 
     function socket:onError(err)
-        print("Error: ", err)
+        metaconcord.print("Error: ", Color(255, 0, 0), err)
     end
 
     function socket:onConnected()
         metaconcord.print("Connected.")
+
+        timer.Create("metaconcord.heartbeat", 10, 0, function()
+            if metaconcord.socket and metaconcord.socket:isConnected() then
+                metaconcord.socket:write("") -- heartbeat LOL
+            else
+                metaconcord.print("Lost connection, reconnecting...")
+                init()
+            end
+        end)
     end
 
     function socket:onDisconnected()
