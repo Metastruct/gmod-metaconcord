@@ -93,10 +93,10 @@ function metaconcord.start()
     metaconcord.clearPayloads()
     metaconcord.connect()
 
-    for _, file in next, (file.Find(path:format("*.lua"), "LUA")) do
-        local name = string.StripExtension(file)
+    for _, filePath in next, (file.Find(path:format("*.lua"), "LUA")) do
+        local name = string.StripExtension(filePath)
         if name == "Payload" then continue end
-        local Payload = include(path:format(file))
+        local Payload = include(path:format(filePath))
         metaconcord.payloads[name] = Payload(metaconcord.socket)
     end
 end
