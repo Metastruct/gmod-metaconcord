@@ -4,7 +4,13 @@ metaconcord = metaconcord or {
     payloads = {}
 }
 
+local token = file.Read("metaconcord-token.txt", "DATA")
 local blue = Color(111, 133, 210)
+
+function metaconcord.print(...)
+    MsgC(blue, "[Discord] ", Color(255, 255, 255), ...)
+    Msg("\n")
+end
 
 local function init()
     metaconcord.stop()
@@ -12,11 +18,6 @@ local function init()
     timer.Simple(1, function()
         metaconcord.start()
     end)
-end
-
-function metaconcord.print(...)
-    MsgC(blue, "[Discord] ", Color(255, 255, 255), ...)
-    Msg("\n")
 end
 
 function metaconcord.connect()
@@ -36,6 +37,7 @@ function metaconcord.connect()
     end)
 
     local socket = GWSockets.createWebSocket("ws://127.0.0.1:3000/")
+    socket:setHeader("X-Auth-Token", token)
 
     function socket:onMessage(data)
         data = util.JSONToTable(data)
