@@ -5,10 +5,10 @@ metaconcord = metaconcord or {
 }
 
 local token = file.Read("metaconcord-token.txt", "DATA")
-local blue = Color(111, 133, 210)
+local headerCol = Color(53, 219, 166)
 
 function metaconcord.print(...)
-    MsgC(blue, "[Discord] ", Color(255, 255, 255), ...)
+    MsgC(headerCol, "[metaconcord] ", Color(255, 255, 255), ...)
     Msg("\n")
 end
 
