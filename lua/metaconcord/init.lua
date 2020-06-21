@@ -84,7 +84,7 @@ function metaconcord.start()
 
         if name ~= "Payload" then
             local Payload = include(path:format(script))
-            metaconcord.payloads[name] = Payload(metaconcord.socket)
+            metaconcord.payloads[Payload.name] = Payload(metaconcord.socket)
         end
     end
 
@@ -93,7 +93,7 @@ function metaconcord.start()
 
         if file.Exists(scriptPath, "LUA") then
             local Payload = include(scriptPath)
-            metaconcord.payloads[name] = Payload(metaconcord.socket)
+            metaconcord.payloads[Payload.name] = Payload(metaconcord.socket)
         end
     end
 end
