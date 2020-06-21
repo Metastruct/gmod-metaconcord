@@ -18,7 +18,7 @@ function ChatPayload:__call(socket)
         self:write({
             message = {
                 player = {
-                    name = ply:Nick(),
+                    name = UndecorateNick(ply:Nick()),
                     steamId64 = ply:SteamID64()
                 },
                 content = message
