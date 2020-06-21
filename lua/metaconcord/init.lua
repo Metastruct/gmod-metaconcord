@@ -13,21 +13,12 @@ function metaconcord.print(...)
     Msg("\n")
 end
 
-local function init()
-    metaconcord.stop()
-
-    timer.Simple(1, function()
-        metaconcord.start()
-    end)
-end
-
 function metaconcord.connect()
     if metaconcord.socket and metaconcord.socket:isConnected() then return end -- metaconcord.print("Already connected!")
     local socket = GWSockets.createWebSocket(("ws://%s"):format(endpoint))
     socket:setHeader("X-Auth-Token", token)
 
     function socket:onMessage(data)
-        print(data)
         data = util.JSONToTable(data)
 
         if data then
@@ -47,12 +38,12 @@ function metaconcord.connect()
     function socket:onConnected()
         metaconcord.print("Connected.")
 
-        timer.Create("metaconcord.heartbeat", 10, 0, function()
+        timer.Create("metaconcordHeartbeat", 10, 0, function()
             if metaconcord.socket and metaconcord.socket:isConnected() then
                 metaconcord.socket:write("") -- heartbeat LOL
             else
                 metaconcord.print("Lost connection, reconnecting...")
-                init()
+                metaconcord.start()
             end
         end)
     end
@@ -109,10 +100,10 @@ end
 
 function metaconcord.stop()
     metaconcord.disconnect()
-    timer.Remove("metaconcord.heartbeat")
+    timer.Remove("metaconcordHeartbeat")
 end
 
-hook.Add("Initialize", "metaconcord", init)
+hook.Add("Initialize", "metaconcord", metaconcord.start)
 
 if GAMEMODE then
     hook.GetTable().Initialize.metaconcord()

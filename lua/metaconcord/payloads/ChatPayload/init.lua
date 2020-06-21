@@ -1,5 +1,5 @@
 util.AddNetworkString("metaconcordChatPayload")
-local Payload = include("./Payload.lua")
+local Payload = include("../Payload.lua")
 local ChatPayload = table.Copy(Payload)
 ChatPayload.__index = ChatPayload
 ChatPayload.super = Payload
