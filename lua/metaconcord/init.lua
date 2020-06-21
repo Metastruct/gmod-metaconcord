@@ -5,6 +5,7 @@ metaconcord = metaconcord or {
 }
 
 local token = file.Read("metaconcord-token.txt", "DATA")
+local endpoint = file.Read("metaconcord-endpoint.txt", "DATA")
 local headerCol = Color(53, 219, 166)
 
 function metaconcord.print(...)
@@ -27,7 +28,7 @@ function metaconcord.connect()
         return
     end
 
-    local socket = GWSockets.createWebSocket("ws://127.0.0.1:3000/")
+    local socket = GWSockets.createWebSocket(("ws://%s"):format(endpoint))
     socket:setHeader("X-Auth-Token", token)
 
     function socket:onMessage(data)
