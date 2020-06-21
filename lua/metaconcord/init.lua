@@ -61,6 +61,7 @@ function metaconcord.connect()
     end
 
     function socket:onDisconnected()
+        metaconcord.clearPayloads()
         metaconcord.socket = nil
         metaconcord.print("Disconnected.")
     end
