@@ -5,7 +5,7 @@ Payload.socket = nil
 Payload.name = ""
 
 function Payload:IsValid()
-    return not not metasocket.socket
+    return not not metaconcord.socket
 end
 
 function Payload:__tostring()
