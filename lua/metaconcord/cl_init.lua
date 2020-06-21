@@ -1,5 +1,9 @@
 local path = "metaconcord/payloads/client/%s"
 
-for _, filePath in next, (file.Find(path:format("*.lua"), "LUA")) do
-    include(path:format(filePath))
+for _, folder in next, select(2, file.Find(path:format("*"), "LUA")) do
+    local filePath = (path .. "/%s"):format(folder, "cl_init.lua")
+
+    if file.Exists(filePath, "LUA") then
+        include(filePath)
+    end
 end

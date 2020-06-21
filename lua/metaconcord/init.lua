@@ -22,16 +22,12 @@ local function init()
 end
 
 function metaconcord.connect()
-    if metaconcord.socket and metaconcord.socket:isConnected() then
-        metaconcord.print("Already connected!")
-
-        return
-    end
-
+    if metaconcord.socket and metaconcord.socket:isConnected() then return end -- metaconcord.print("Already connected!")
     local socket = GWSockets.createWebSocket(("ws://%s"):format(endpoint))
     socket:setHeader("X-Auth-Token", token)
 
     function socket:onMessage(data)
+        print(data)
         data = util.JSONToTable(data)
 
         if data then
@@ -45,6 +41,7 @@ function metaconcord.connect()
 
     function socket:onError(err)
         metaconcord.print("Error: ", Color(255, 0, 0), err)
+        metaconcord.disconnect()
     end
 
     function socket:onConnected()
@@ -61,9 +58,7 @@ function metaconcord.connect()
     end
 
     function socket:onDisconnected()
-        metaconcord.clearPayloads()
-        metaconcord.socket = nil
-        metaconcord.print("Disconnected.")
+        metaconcord.disconnect()
     end
 
     metaconcord.socket = socket
@@ -72,14 +67,12 @@ function metaconcord.connect()
 end
 
 function metaconcord.disconnect()
-    if not metaconcord.socket or not metaconcord.socket:isConnected() then
-        metaconcord.print("Not connected.")
-
-        return
-    end
-
+    if not metaconcord.socket or not metaconcord.socket:isConnected() then return end -- metaconcord.print("Not connected.")
     metaconcord.print("Disconnecting...")
+    metaconcord.clearPayloads()
     metaconcord.socket:close()
+    metaconcord.socket = nil
+    metaconcord.print("Disconnected.")
 end
 
 function metaconcord.clearPayloads()
@@ -92,19 +85,29 @@ end
 local path = "metaconcord/payloads/%s"
 
 function metaconcord.start()
-    metaconcord.clearPayloads()
+    metaconcord.disconnect()
     metaconcord.connect()
 
-    for _, filePath in next, (file.Find(path:format("*.lua"), "LUA")) do
-        local name = string.StripExtension(filePath)
-        if name == "Payload" then continue end
-        local Payload = include(path:format(filePath))
-        metaconcord.payloads[name] = Payload(metaconcord.socket)
+    for _, script in next, (file.Find(path:format("*.lua"), "LUA")) do
+        local name = string.StripExtension(script)
+
+        if name ~= "Payload" then
+            local Payload = include(path:format(script))
+            metaconcord.payloads[name] = Payload(metaconcord.socket)
+        end
+    end
+
+    for _, folder in next, select(2, file.Find(path:format("*"), "LUA")) do
+        local scriptPath = (path .. "/%s"):format(folder, "init.lua")
+
+        if file.Exists(scriptPath, "LUA") then
+            local Payload = include(scriptPath)
+            metaconcord.payloads[name] = Payload(metaconcord.socket)
+        end
     end
 end
 
 function metaconcord.stop()
-    metaconcord.clearPayloads()
     metaconcord.disconnect()
     timer.Remove("metaconcord.heartbeat")
 end

@@ -1,3 +1,4 @@
+util.AddNetworkString("metaconcordChatPayload")
 local Payload = include("./Payload.lua")
 local ChatPayload = table.Copy(Payload)
 ChatPayload.__index = ChatPayload
@@ -34,7 +35,10 @@ function ChatPayload:__gc()
 end
 
 function ChatPayload:handle(data)
-    PrintTable(data)
+    net.Start("metaconcordChatPayload")
+    net.WriteString(data.message.user.name)
+    net.WriteString(data.message.content)
+    net.Broadcast()
 end
 
 return setmetatable({}, ChatPayload)
