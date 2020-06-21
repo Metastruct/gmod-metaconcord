@@ -6,8 +6,10 @@ ChatPayload.name = "ChatPayload"
 
 function ChatPayload:__call(socket)
     self.super.__call(self, socket)
+    local UndecorateNick = UndecorateNick or function(...) return ... end
 
     hook.Add("PlayerSay", self, function(_, ply, message, isTeamChat, isLocalChat)
+        if isLocalChat then return end
         if ply.IsBanned and ply:IsBanned() then return end
         message = message:gsub("<.-=.->", "")
         message = message:gsub("/me%s+", "")
