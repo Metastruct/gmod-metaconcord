@@ -82,14 +82,14 @@ function metaconcord.disconnect()
     metaconcord.socket:close()
 end
 
-local path = "metaconcord/payloads/%s"
-
 function metaconcord.clearPayloads()
     for k, payload in pairs(metaconcord.payloads) do
         payload:__gc() -- 5.2 only :(
         metaconcord.payloads[k] = nil
     end
 end
+
+local path = "metaconcord/payloads/%s"
 
 function metaconcord.start()
     metaconcord.clearPayloads()
