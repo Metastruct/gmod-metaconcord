@@ -1,6 +1,6 @@
-local path = "metaconcord/payloads/client/%s"
+local path = "metaconcord/payloads/%s"
 
-for _, folder in next, select(2, file.Find(path:format("*"), "LUA")) do
+for _, folder in next, ({file.Find(path:format("*"), "LUA")})[2] do
     local scriptPath = (path .. "/%s"):format(folder, "cl_init.lua")
 
     if file.Exists(scriptPath, "LUA") then

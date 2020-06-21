@@ -88,12 +88,17 @@ function metaconcord.start()
         end
     end
 
-    for _, folder in next, select(2, file.Find(path:format("*"), "LUA")) do
+    for _, folder in next, ({file.Find(path:format("*"), "LUA")})[2] do
         local scriptPath = (path .. "/%s"):format(folder, "init.lua")
+        local clScriptPath = (path .. "/%s"):format(folder, "cl_init.lua")
 
         if file.Exists(scriptPath, "LUA") then
             local Payload = include(scriptPath)
             metaconcord.payloads[Payload.name] = Payload(metaconcord.socket)
+        end
+
+        if file.Exists(clScriptPath, "LUA") then
+            AddCSLuaFile(clScriptPath)
         end
     end
 end

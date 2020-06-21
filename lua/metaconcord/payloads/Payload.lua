@@ -2,10 +2,10 @@ local Payload = {}
 Payload.__index = Payload
 Payload.super = Payload
 Payload.socket = nil
-Payload.name = ""
+Payload.name = nil
 
 function Payload:IsValid()
-    return not not metaconcord.socket
+    return self.socket and self.socket:isConnected()
 end
 
 function Payload:__tostring()
