@@ -103,11 +103,15 @@ end
 function metaconcord.start()
     if metaconcord.socket and metaconcord.socket:isConnected() then
         local onDisconnected = metaconcord.socket.onDisconnected
+
         metaconcord.socket.onDisconnected = function(self)
             onDisconnected(self)
 
-            timer.Simple(0, function() metaconcord.connect() end)
+            timer.Simple(0, function()
+                metaconcord.connect()
+            end)
         end
+
         metaconcord.stop()
     else
         metaconcord.connect()
@@ -121,9 +125,7 @@ end
 
 function metaconcord.getPayload(name)
     for _, payload in next, metaconcord.payloads do
-        if name == payload.name then
-            return payload
-        end
+        if name == payload.name then return payload end
     end
 end
 
