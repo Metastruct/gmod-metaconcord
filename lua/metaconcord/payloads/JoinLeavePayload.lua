@@ -30,8 +30,6 @@ function JoinLeavePayload:__call(socket)
 			},
 			spawned = true
 		})
-
-		local payload = metaconcord.getPayload("StatusPayload")
 	end)
 
 	return self
