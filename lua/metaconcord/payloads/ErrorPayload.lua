@@ -5,7 +5,7 @@ ErrorPayload.super = Payload
 ErrorPayload.name = "ErrorPayload"
 
 function ErrorPayload:handle(data)
-    PrintTable(data)
+	PrintTable(data)
 end
 
 return setmetatable({}, ErrorPayload)
