@@ -5,55 +5,41 @@ JoinLeavePayload.super = Payload
 JoinLeavePayload.name = "JoinLeavePayload"
 
 function JoinLeavePayload:__call(socket)
-    self.super.__call(self, socket)
-    local UndecorateNick = UndecorateNick or function(...) return ... end
+	self.super.__call(self, socket)
+	local UndecorateNick = UndecorateNick or function(...) return ... end
 
-    hook.Add("PlayerLeave", self, function(_, name, _, steamId, reason)
-        if not steamId then return end
+	hook.Add("PlayerLeave", self, function(_, name, _, steamId, reason)
+		if not steamId then return end
 
-        self:write({
-            player = {
-                name = UndecorateNick(name),
-                steamId64 = util.SteamIDTo64(steamId)
-            },
-            reason = reason
-        })
+		self:write({
+			player = {
+				name = UndecorateNick(name),
+				steamId64 = util.SteamIDTo64(steamId)
+			},
+			reason = reason
+		})
+	end)
 
-        local payload = metaconcord.getPayload("StatusPayload")
+	hook.Add("PlayerInitialSpawn", self, function(_, ply)
+		if ply:IsBot() then return end
 
-        if payload then
-            timer.Simple(0, function()
-                payload:updateStatus()
-            end)
-        end
-    end)
+		self:write({
+			player = {
+				name = UndecorateNick(ply:Nick()),
+				steamId64 = ply:SteamID64()
+			},
+			spawned = true
+		})
 
-    hook.Add("PlayerInitialSpawn", self, function(_, ply)
-        if ply:IsBot() then return end
+		local payload = metaconcord.getPayload("StatusPayload")
+	end)
 
-        self:write({
-            player = {
-                name = UndecorateNick(ply:Nick()),
-                steamId64 = ply:SteamID64()
-            },
-            spawned = true
-        })
-
-        local payload = metaconcord.getPayload("StatusPayload")
-
-        if payload then
-            timer.Simple(0, function()
-                payload:updateStatus()
-            end)
-        end
-    end)
-
-    return self
+	return self
 end
 
 function JoinLeavePayload:__gc()
-    hook.Remove("PlayerLeave", self)
-    hook.Remove("PlayerInitialSpawn", self)
+	hook.Remove("PlayerLeave", self)
+	hook.Remove("PlayerInitialSpawn", self)
 end
 
 return setmetatable({}, JoinLeavePayload)
