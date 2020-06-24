@@ -76,7 +76,6 @@ function StatusPayload:__call(socket)
 end
 
 function StatusPayload:__gc()
-	timer.Remove("metaconcordStatusPayload")
 	hook.Remove("player_connect", self)
 	hook.Remove("player_spawn", self)
 	hook.Remove("player_disconnect", self)
