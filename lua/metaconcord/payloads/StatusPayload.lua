@@ -19,10 +19,10 @@ function StatusPayload:__call(socket)
 		local wsName, wsId = wmap:match("(.-)|(.+)")
 		local map = game.GetMap()
 		local workshopMap
-		if map == wsname then
+		if #wsName > 0 then
 			workshopMap = {
-				name = wsname,
-				id = wsid
+				name = wsName,
+				id = wsId
 			}
 		end
 
