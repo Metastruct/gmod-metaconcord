@@ -18,6 +18,9 @@ function JoinLeavePayload:__call(socket)
 			},
 			reason = reason
 		})
+
+		local payload = metaconcord.getPayload("StatusPayload")
+		if payload then timer.Simple(0, function() payload:updateStatus() end end
 	end)
 	hook.Add("PlayerInitialSpawn", self, function(_, ply)
 		if ply:IsBot() then return end
@@ -29,6 +32,9 @@ function JoinLeavePayload:__call(socket)
 			},
 			spawned = true
 		})
+
+		local payload = metaconcord.getPayload("StatusPayload")
+		if payload then timer.Simple(0, function() payload:updateStatus() end end
 	end)
 
     return self

@@ -4,15 +4,24 @@ StatusPayload.__index = StatusPayload
 StatusPayload.super = Payload
 StatusPayload.name = "StatusPayload"
 
+local function hookAndListen(name, ...)
+	gameevent.Listen(name)
+	hook.Add(name, ...)
+end
+local connecting = {}
+
 function StatusPayload:__call(socket)
     self.super.__call(self, socket)
     local UndecorateNick = UndecorateNick or function(...) return ... end
 
-	local function updateStatus()
+	function self:updateStatus()
 		local players = player.GetAll()
 		local list = {}
 		for _, ply in next, players do
 			list[#list + 1] = UndecorateNick(ply:Nick())
+		end
+		for name in next, connecting do
+			list[#list + 1] = name .. " (joining)"
 		end
 
 		local wmap = cookie.GetString("wmap", "")
@@ -36,15 +45,26 @@ function StatusPayload:__call(socket)
 			}
 		})
 	end
+	self.onConnected = self.updateStatus
 
-	self.onConnected = updateStatus
-	timer.Create("metaconcordStatusPayload", 30, 0, updateStatus)
+	local function add(data)
+		connecting[data.name] = true
+	end
+	local function remove(data)
+		connecting[data.name] = nil
+	end
+	hookAndListen("player_connect", self, add)
+	hookAndListen("player_spawn", self, remove)
+	hookAndListen("player_disconnect", self, remove)
 
     return self
 end
 
 function StatusPayload:__gc()
     timer.Remove("metaconcordStatusPayload")
+	hook.Remove("player_connect", self)
+	hook.Remove("player_spawn", self)
+	hook.Remove("player_disconnect", self)
 end
 
 return setmetatable({}, StatusPayload)

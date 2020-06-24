@@ -119,6 +119,14 @@ function metaconcord.stop()
     timer.Remove("metaconcordHeartbeat")
 end
 
+function metaconcord.getPayload(name)
+    for _, payload in next, metaconcord.payloads do
+        if name == payload.name then
+            return payload
+        end
+    end
+end
+
 hook.Add("Initialize", "metaconcord", metaconcord.start)
 
 if GAMEMODE then
