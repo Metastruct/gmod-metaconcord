@@ -27,6 +27,7 @@ function JoinLeavePayload:__call(socket)
 				name = UndecorateNick(ply:Nick()),
 				steamId64 = ply:SteamID64()
 			},
+			spawned = true
 		})
 	end)
 
