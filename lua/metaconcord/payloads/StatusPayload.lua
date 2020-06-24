@@ -52,12 +52,14 @@ function StatusPayload:__call(socket)
 
     self.onConnected = self.updateStatus
 
-    local function add(data)
+    local function add(self, data)
         connecting[data.name] = true
+        self:updateStatus()
     end
 
-    local function remove(data)
+    local function remove(self, data)
         connecting[data.name] = nil
+        self:updateStatus()
     end
 
     hookAndListen("player_connect", self, add)
