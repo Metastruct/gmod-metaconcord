@@ -62,8 +62,6 @@ function metaconcord.connect()
             end
         end
 
-        print("pplz")
-
         timer.Simple(0, function()
             for _, payload in next, metaconcord.payloads do
                 if payload.onConnected then
