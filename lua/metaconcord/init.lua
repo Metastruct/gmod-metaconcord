@@ -6,6 +6,7 @@ metaconcord = metaconcord or {
 
 local token = file.Read("metaconcord-token.txt", "DATA")
 local endpoint = file.Read("metaconcord-endpoint.txt", "DATA")
+local path = "metaconcord/payloads/%s"
 local headerCol = Color(53, 219, 166)
 
 function metaconcord.print(...)
@@ -38,20 +39,36 @@ function metaconcord.connect()
     function socket:onConnected()
         metaconcord.print("Connected.")
 
+        for _, script in next, (file.Find(path:format("*.lua"), "LUA")) do
+            local name = string.StripExtension(script)
+
+            if name ~= "Payload" then
+                local Payload = include(path:format(script))
+                metaconcord.payloads[Payload.name] = Payload(self)
+            end
+        end
+
+        for _, folder in next, ({file.Find(path:format("*"), "LUA")})[2] do
+            local scriptPath = (path .. "/%s"):format(folder, "init.lua")
+            local clScriptPath = (path .. "/%s"):format(folder, "cl_init.lua")
+
+            if file.Exists(scriptPath, "LUA") then
+                local Payload = include(scriptPath)
+                metaconcord.payloads[Payload.name] = Payload(self)
+            end
+
+            if file.Exists(clScriptPath, "LUA") then
+                AddCSLuaFile(clScriptPath)
+            end
+        end
+
+        print("pplz")
+
         timer.Simple(0, function()
             for _, payload in next, metaconcord.payloads do
                 if payload.onConnected then
                     payload:onConnected()
                 end
-            end
-        end)
-
-        timer.Create("metaconcordHeartbeat", 10, 0, function()
-            if metaconcord.socket and metaconcord.socket:isConnected() then
-                metaconcord.socket:write("") -- heartbeat LOL
-            else
-                metaconcord.print("Lost connection, reconnecting...")
-                metaconcord.start()
             end
         end)
     end
@@ -66,6 +83,15 @@ function metaconcord.connect()
     metaconcord.socket = socket
     metaconcord.print("Connecting...")
     metaconcord.socket:open()
+
+    timer.Create("metaconcordHeartbeat", 10, 0, function()
+        if metaconcord.socket and metaconcord.socket:isConnected() then
+            metaconcord.socket:write("") -- heartbeat LOL
+        else
+            metaconcord.print("Lost connection, reconnecting...")
+            metaconcord.start()
+        end
+    end)
 end
 
 function metaconcord.disconnect()
@@ -76,33 +102,17 @@ function metaconcord.disconnect()
     metaconcord.print("Disconnected.")
 end
 
-local path = "metaconcord/payloads/%s"
-
 function metaconcord.start()
-    metaconcord.stop()
-    metaconcord.connect()
+    if metaconcord.socket and metaconcord.socket:isConnected() then
+        local onDisconnected = metaconcord.socket.onDisconnected
+        metaconcord.socket.onDisconnected = function(self)
+            onDisconnected(self)
 
-    for _, script in next, (file.Find(path:format("*.lua"), "LUA")) do
-        local name = string.StripExtension(script)
-
-        if name ~= "Payload" then
-            local Payload = include(path:format(script))
-            metaconcord.payloads[Payload.name] = Payload(metaconcord.socket)
+            timer.Simple(0, function() metaconcord.connect() end)
         end
-    end
-
-    for _, folder in next, ({file.Find(path:format("*"), "LUA")})[2] do
-        local scriptPath = (path .. "/%s"):format(folder, "init.lua")
-        local clScriptPath = (path .. "/%s"):format(folder, "cl_init.lua")
-
-        if file.Exists(scriptPath, "LUA") then
-            local Payload = include(scriptPath)
-            metaconcord.payloads[Payload.name] = Payload(metaconcord.socket)
-        end
-
-        if file.Exists(clScriptPath, "LUA") then
-            AddCSLuaFile(clScriptPath)
-        end
+        metaconcord.stop()
+    else
+        metaconcord.connect()
     end
 end
 
