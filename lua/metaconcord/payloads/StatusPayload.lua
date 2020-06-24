@@ -32,7 +32,7 @@ function StatusPayload:__call(socket)
         local map = game.GetMap()
         local workshopMap
 
-        if #wsName > 0 then
+        if wsName and #wsName > 0 then
             workshopMap = {
                 name = wsName,
                 id = wsId
