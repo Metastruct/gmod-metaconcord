@@ -38,6 +38,14 @@ function metaconcord.connect()
     function socket:onConnected()
         metaconcord.print("Connected.")
 
+        timer.Simple(0, function()
+            for _, payload in next, metaconcord.payloads do
+                if payload.onConnected then
+                    payload:onConnected()
+                end
+            end
+        end)
+
         timer.Create("metaconcordHeartbeat", 10, 0, function()
             if metaconcord.socket and metaconcord.socket:isConnected() then
                 metaconcord.socket:write("") -- heartbeat LOL
@@ -49,7 +57,10 @@ function metaconcord.connect()
     end
 
     function socket:onDisconnected()
-        metaconcord.disconnect()
+        for k, payload in pairs(metaconcord.payloads) do
+            payload:__gc() -- 5.2 only :(
+            metaconcord.payloads[k] = nil
+        end
     end
 
     metaconcord.socket = socket
@@ -60,23 +71,15 @@ end
 function metaconcord.disconnect()
     if not metaconcord.socket or not metaconcord.socket:isConnected() then return end -- metaconcord.print("Not connected.")
     metaconcord.print("Disconnecting...")
-    metaconcord.clearPayloads()
     metaconcord.socket:close()
     metaconcord.socket = nil
     metaconcord.print("Disconnected.")
 end
 
-function metaconcord.clearPayloads()
-    for k, payload in pairs(metaconcord.payloads) do
-        payload:__gc() -- 5.2 only :(
-        metaconcord.payloads[k] = nil
-    end
-end
-
 local path = "metaconcord/payloads/%s"
 
 function metaconcord.start()
-    metaconcord.disconnect()
+    metaconcord.stop()
     metaconcord.connect()
 
     for _, script in next, (file.Find(path:format("*.lua"), "LUA")) do

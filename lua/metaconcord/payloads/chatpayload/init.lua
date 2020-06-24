@@ -15,6 +15,8 @@ function ChatPayload:__call(socket)
         message = message:gsub("<.-=.->", "")
         message = message:gsub("/me%s+", "")
         message = message:gsub("<stop>", "")
+        message = message:Trim()
+        if message == "" then return end
 
         self:write({
             message = {
