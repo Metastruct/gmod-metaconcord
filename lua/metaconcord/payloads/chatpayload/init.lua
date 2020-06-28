@@ -39,6 +39,7 @@ end
 function ChatPayload:handle(data)
 	net.Start("metaconcordChatPayload")
 	net.WriteString(data.message.user.name)
+	net.WriteInt(data.message.user.color, 25)
 	net.WriteString(data.message.content)
 	net.Broadcast()
 end
