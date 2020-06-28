@@ -77,7 +77,6 @@ function metaconcord.connect()
 			metaconcord.payloads[k] = nil
 		end
 
-		self = nil
 		metaconcord.print("Disconnected.")
 	end
 
