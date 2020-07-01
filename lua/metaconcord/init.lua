@@ -8,6 +8,7 @@ local token = file.Read("metaconcord-token.txt", "DATA")
 local endpoint = file.Read("metaconcord-endpoint.txt", "DATA")
 local path = "metaconcord/payloads/%s"
 local headerCol = Color(53, 219, 166)
+local retry = false
 local backoff = 0
 
 function metaconcord.print(...)
@@ -71,6 +72,14 @@ function metaconcord.connect()
 				end
 			end
 		end)
+
+		timer.Create("metaconcordHeartbeat", 10, 0, function()
+			if metaconcord.socket and metaconcord.socket:isConnected() then
+				metaconcord.socket:write("") -- heartbeat LOL
+			end
+		end)
+
+		timer.Remove("metaconcordRetry")
 	end
 
 	function socket:onDisconnected()
@@ -81,8 +90,10 @@ function metaconcord.connect()
 
 		metaconcord.socket = nil
 		metaconcord.print("Disconnected.")
+		timer.Remove("metaconcordHeartbeat")
 
 		timer.Create("metaconcordRetry", math.min(2 ^ backoff, 60 * 5), 1, function()
+			if not retry then return end
 			metaconcord.print("Lost connection, reconnecting...")
 			metaconcord.start()
 		end)
@@ -102,19 +113,13 @@ function metaconcord.disconnect()
 end
 
 function metaconcord.start()
+	retry = true
 	metaconcord.connect()
-
-	timer.Create("metaconcordHeartbeat", 10, 0, function()
-		if metaconcord.socket and metaconcord.socket:isConnected() then
-			metaconcord.socket:write("") -- heartbeat LOL
-		end
-	end)
 end
 
 function metaconcord.stop()
+	retry = false
 	metaconcord.disconnect()
-	timer.Remove("metaconcordHeartbeat")
-	timer.Remove("metaconcordRetry")
 	backoff = 0
 end
 
@@ -127,5 +132,16 @@ end
 hook.Add("Initialize", "metaconcord", metaconcord.start)
 
 if GAMEMODE then
-	hook.GetTable().Initialize.metaconcord()
+	if metaconcord.socket then
+		local onDisconnected = metaconcord.socket.onDisconnected
+
+		metaconcord.socket.onDisconnected = function(self)
+			onDisconnected(self)
+			timer.Simple(0, hook.GetTable().Initialize.metaconcord)
+		end
+
+		metaconcord.stop()
+	else
+		hook.GetTable().Initialize.metaconcord()
+	end
 end
