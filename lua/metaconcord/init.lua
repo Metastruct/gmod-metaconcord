@@ -73,13 +73,13 @@ function metaconcord.connect()
 			end
 		end)
 
-		timer.Create("metaconcordHeartbeat", 10, 0, function()
+		timer.Create("metaconcord.Heartbeat", 10, 0, function()
 			if metaconcord.socket and metaconcord.socket:isConnected() then
 				metaconcord.socket:write("") -- heartbeat LOL
 			end
 		end)
 
-		timer.Remove("metaconcordRetry")
+		timer.Remove("metaconcord.Retry")
 	end
 
 	function socket:onDisconnected()
@@ -90,9 +90,9 @@ function metaconcord.connect()
 
 		metaconcord.socket = nil
 		metaconcord.print("Disconnected.")
-		timer.Remove("metaconcordHeartbeat")
+		timer.Remove("metaconcord.Heartbeat")
 
-		timer.Create("metaconcordRetry", math.min(2 ^ backoff, 60 * 5), 1, function()
+		timer.Create("metaconcord.Retry", math.min(2 ^ backoff, 60 * 5), 1, function()
 			if not retry then return end
 			metaconcord.print("Lost connection, reconnecting...")
 			metaconcord.start()
