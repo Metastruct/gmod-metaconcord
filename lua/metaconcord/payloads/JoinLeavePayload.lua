@@ -10,7 +10,7 @@ function JoinLeavePayload:__call(socket)
 
 	hook.Add("PlayerLeave", self, function(_, name, userId, steamId, reason)
 		local ply = Player(userId)
-		if (IsValid(ply) and ply:IsBot()) or steamId:match("STEAM_0:%d+:%d+") then return end
+		if (IsValid(ply) and ply:IsBot()) or not steamId:match("STEAM_0:%d+:%d+") then return end
 
 		self:write({
 			player = {
