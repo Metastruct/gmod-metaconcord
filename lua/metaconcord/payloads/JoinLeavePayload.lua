@@ -15,7 +15,7 @@ function JoinLeavePayload:__call(socket)
 		self:write({
 			player = {
 				name = UndecorateNick(IsValid(ply) and ply:Nick() or name),
-				steamId64 = steamId
+				steamId64 = util.SteamIDTo64(steamId)
 			},
 			reason = reason
 		})
