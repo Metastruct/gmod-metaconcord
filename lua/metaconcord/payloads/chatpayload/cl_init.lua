@@ -7,6 +7,9 @@ net.Receive("metaconcordChatPayload", function()
 	local content = net.ReadString()
 	local roleColor = blurple
 
+	local ret = hook.Run("DiscordSay", name, content)
+	if ret == false then return end
+
 	if color > 1 then
 		local hex = string.format("%.6x", color)
 		-- Disgusting
