@@ -13,7 +13,7 @@ function BanPayload:__call(socket)
 
 		local UndecorateNick = UndecorateNick or function(...) return ... end
 		local bannedInfo = IsValid(banned) and ("%s (%s)"):format(UndecorateNick(banned:Nick()), bannedId) or bannedId
-		local bannerInfo = IsValid(banner) and ("%s (%s)"):format(UndecorateNick(banner:Nick()), bannedId) or bannerId
+		local bannerInfo = IsValid(banner) and ("%s (%s)"):format(UndecorateNick(banner:Nick()), bannerId) or bannerId
 
 		self:write({
 			ban = {
