@@ -20,12 +20,14 @@ function StatusPayload:__call(socket)
 		local list = {}
 
 		for _, ply in next, players do
-			list[#list + 1] = {
-				isAdmin = ply:IsAdmin(),
-				accountId = ply:AccountID(),
-				avatar = ply.SteamCache and ply:SteamCache() and ply:SteamCache().avatarfull,
-				nick = UndecorateNick(ply:Nick())
-			}
+			if not ply:IsBot() then
+				list[#list + 1] = {
+					isAdmin = ply:IsAdmin(),
+					accountId = ply:AccountID(),
+					avatar = ply.SteamCache and ply:SteamCache() and ply:SteamCache().avatarfull,
+					nick = UndecorateNick(ply:Nick())
+				}
+			end
 		end
 
 		for _, data in next, connecting do
