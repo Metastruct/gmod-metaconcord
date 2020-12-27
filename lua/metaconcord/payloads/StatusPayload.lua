@@ -23,7 +23,7 @@ function StatusPayload:__call(socket)
 			list[#list + 1] = {
 				isAdmin = ply:IsAdmin(),
 				accountId = ply:AccountID(),
-				avatar = ply.SteamCache and ply:SteamCache().avatarfull,
+				avatar = ply.SteamCache and ply:SteamCache() and ply:SteamCache().avatarfull,
 				nick = UndecorateNick(ply:Nick())
 			}
 		end
