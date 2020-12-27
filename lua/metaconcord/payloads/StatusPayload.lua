@@ -20,11 +20,20 @@ function StatusPayload:__call(socket)
 		local list = {}
 
 		for _, ply in next, players do
-			list[#list + 1] = UndecorateNick(ply:Nick())
+			list[#list + 1] = {
+				isAdmin = ply:IsAdmin(),
+				accountId = ply:AccountID(),
+				avatar = ply.SteamCache and ply:SteamCache().avatarfull,
+				nick = UndecorateNick(ply:Nick())
+			}
 		end
 
-		for _, name in next, connecting do
-			list[#list + 1] = name .. " (joining)"
+		for _, data in next, connecting do
+			list[#list + 1] = {
+				isAdmin = aowl and aowl.CheckUserGroupFromSteamID(data.networkid),
+				accountId = util.AccountIDFromSteamID and util.AccountIDFromSteamID(data.networkid),
+				nick = data.name .. " (joining)"
+			}
 		end
 
 		local wmap = cookie.GetString("wmap", "")
@@ -53,7 +62,7 @@ function StatusPayload:__call(socket)
 	self.onConnected = self.updateStatus
 
 	local function add(self, data)
-		connecting[data.userid] = data.name
+		connecting[data.userid] = data
 
 		timer.Simple(0, function()
 			self:updateStatus()
