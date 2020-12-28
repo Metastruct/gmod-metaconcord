@@ -32,7 +32,7 @@ function StatusPayload:__call(socket)
 
 		for _, data in next, connecting do
 			list[#list + 1] = {
-				isAdmin = aowl and aowl.CheckUserGroupFromSteamID(data.networkid),
+				isAdmin = aowl and aowl.CheckUserGroupFromSteamID(data.networkid, "developers"),
 				accountId = util.AccountIDFromSteamID and util.AccountIDFromSteamID(data.networkid),
 				nick = data.name .. " (joining)"
 			}
