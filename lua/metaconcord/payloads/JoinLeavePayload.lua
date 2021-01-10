@@ -6,6 +6,7 @@ JoinLeavePayload.name = "JoinLeavePayload"
 
 function JoinLeavePayload:__call(socket)
 	self.super.__call(self, socket)
+
 	local UndecorateNick = UndecorateNick or function(...) return ... end
 
 	hook.Add("PlayerLeave", self, function(_, nick, userId, steamId, reason)
