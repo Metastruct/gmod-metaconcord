@@ -13,6 +13,7 @@ local connecting = {}
 
 function StatusPayload:__call(socket)
 	self.super.__call(self, socket)
+
 	local UndecorateNick = UndecorateNick or function(...) return ... end
 
 	function self:updateStatus()
