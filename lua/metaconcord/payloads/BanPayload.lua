@@ -7,21 +7,23 @@ BanPayload.name = "BanPayload"
 function BanPayload:__call(socket)
 	self.super.__call(self, socket)
 
-	hook.Add("OnPlayerBanned", self, function(_, bannedId, bannerId, banReason, unbanTime)
-		local banned = player.GetBySteamID(bannedId)
-		local banner = player.GetBySteamID(bannerId)
+	local UndecorateNick = UndecorateNick or function(...) return ... end
 
-		local UndecorateNick = UndecorateNick or function(...) return ... end
-		local bannedInfo = IsValid(banned) and ("%s (%s)"):format(UndecorateNick(banned:Nick()), bannedId) or bannedId
-		local bannerInfo = IsValid(banner) and ("%s (%s)"):format(UndecorateNick(banner:Nick()), bannerId) or bannerId
+	hook.Add("OnPlayerBanned", self, function(_, steamId, bannerSteamId, reason, unbanTime)
+		local banned = player.GetBySteamID(steamId)
+		local banner = player.GetBySteamID(bannerSteamId)
 
 		self:write({
-			ban = {
-				banned = bannedInfo,
-				banner = bannerInfo,
-				reason = banReason,
-				unbanTime = tostring(unbanTime),
-			}
+			player = {
+				nick = IsValid(banner) and UndecorateNick(banner:Nick()),
+				steamId = bannerSteamId,
+			},
+			banned = {
+				nick = IsValid(banned) and UndecorateNick(banned:Nick()),
+				steamId = steamId,
+			},
+			reason = reason,
+			unbanTime = tostring(unbanTime),
 		})
 	end)
 

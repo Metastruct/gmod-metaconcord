@@ -25,10 +25,10 @@ function Payload:write(payload)
 	if not self.socket then return ErrorNoHalt("no socket object\n") end
 	if not self.socket:isConnected() then return ErrorNoHalt("socket not open\n") end
 	if type(payload) ~= "table" then return ErrorNoHalt("invalid payload, table needed\n") end
-	payload.name = self.name
 
 	self.socket:write(util.TableToJSON({
-		payload = payload
+		name = self.name,
+		data = payload
 	}))
 
 	return true

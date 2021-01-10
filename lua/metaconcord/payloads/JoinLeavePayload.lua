@@ -8,13 +8,13 @@ function JoinLeavePayload:__call(socket)
 	self.super.__call(self, socket)
 	local UndecorateNick = UndecorateNick or function(...) return ... end
 
-	hook.Add("PlayerLeave", self, function(_, name, userId, steamId, reason)
+	hook.Add("PlayerLeave", self, function(_, nick, userId, steamId, reason)
 		local ply = Player(userId)
 		if (IsValid(ply) and ply:IsBot()) or not steamId:match("STEAM_0:%d+:%d+") then return end
 
 		self:write({
 			player = {
-				name = UndecorateNick(IsValid(ply) and ply:Nick() or name),
+				nick = UndecorateNick(IsValid(ply) and ply:Nick() or nick),
 				steamId64 = util.SteamIDTo64(steamId)
 			},
 			reason = reason
@@ -26,7 +26,7 @@ function JoinLeavePayload:__call(socket)
 
 		self:write({
 			player = {
-				name = UndecorateNick(ply:Nick()),
+				nick = UndecorateNick(ply:Nick()),
 				steamId64 = ply:SteamID64()
 			},
 			spawned = true
