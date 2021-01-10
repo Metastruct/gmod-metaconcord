@@ -19,13 +19,11 @@ function ChatPayload:__call(socket)
 		if message == "" then return end
 
 		self:write({
-			message = {
-				player = {
-					name = UndecorateNick(ply:Nick()),
-					steamId64 = ply:SteamID64()
-				},
-				content = message
-			}
+			player = {
+				nick = UndecorateNick(ply:Nick()),
+				steamId64 = ply:SteamID64()
+			},
+			content = message
 		})
 	end)
 

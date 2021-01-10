@@ -51,13 +51,11 @@ function StatusPayload:__call(socket)
 		end
 
 		self:write({
-			status = {
-				hostname = GetHostName(),
-				players = list,
-				map = map,
-				workshopMap = workshopMap,
-				uptime = SysTime() / 60 / 60
-			}
+			hostname = GetHostName(),
+			players = list,
+			map = map,
+			workshopMap = workshopMap,
+			uptime = SysTime() / 60 / 60
 		})
 	end
 
