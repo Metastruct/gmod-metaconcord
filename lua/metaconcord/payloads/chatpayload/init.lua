@@ -35,15 +35,15 @@ function ChatPayload:__gc()
 end
 
 function ChatPayload:handle(data)
-	local ret = hook.Run("DiscordSay", data.message.user.name, data.message.content)
+	local ret = hook.Run("DiscordSay", data.user.nick, data.content)
 	if ret == false then return end
 
-	ret = isstring(ret) and ret or data.message.content
+	ret = isstring(ret) and ret or data.content
 	if ret == "" then return end
 
 	net.Start("metaconcordChatPayload")
-	net.WriteString(data.message.user.name)
-	net.WriteInt(data.message.user.color, 25)
+	net.WriteString(data.user.nick)
+	net.WriteInt(data.user.color, 25)
 	net.WriteString(ret)
 	net.Broadcast()
 end

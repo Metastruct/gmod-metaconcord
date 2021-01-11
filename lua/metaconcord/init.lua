@@ -27,7 +27,7 @@ function metaconcord.connect()
 		if data then
 			for _, payload in next, metaconcord.payloads do
 				if data.payload.name == payload.name then
-					payload:handle(data.payload)
+					payload:handle(data.payload.data)
 				end
 			end
 		end
