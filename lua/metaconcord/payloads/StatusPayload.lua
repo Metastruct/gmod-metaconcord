@@ -56,7 +56,11 @@ function StatusPayload:__call(socket)
 			players = list,
 			map = map,
 			workshopMap = workshopMap,
-			uptime = SysTime() / 60 / 60
+			uptime = SysTime() / 60 / 60,
+			gamemode = {
+				folderName = GAMEMODE.FolderName,
+				name = GAMEMODE.Name,
+			}
 		})
 	end
 
