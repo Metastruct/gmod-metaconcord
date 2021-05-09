@@ -15,13 +15,14 @@ function StatusPayload:__call(socket)
 	self.super.__call(self, socket)
 
 	local UndecorateNick = UndecorateNick or function(...) return ... end
-
+	_G.DevsToHide = _G.DevsToHide or {}
+	
 	function self:updateStatus()
 		local players = player.GetAll()
 		local list = {}
 
 		for _, ply in next, players do
-			if not ply:IsBot() then
+			if not ply:IsBot() and not _G.DevsToHide[ply:SteamID()] then
 				list[#list + 1] = {
 					isAdmin = ply:IsAdmin(),
 					accountId = ply:AccountID(),
@@ -32,11 +33,13 @@ function StatusPayload:__call(socket)
 		end
 
 		for _, data in next, connecting do
-			list[#list + 1] = {
-				isAdmin = aowl and aowl.CheckUserGroupFromSteamID(data.networkid, "developers"),
-				accountId = util.AccountIDFromSteamID and util.AccountIDFromSteamID(data.networkid),
-				nick = data.name .. " (joining)"
-			}
+			if not _G.DevsToHide[data.networkid] then
+				list[#list + 1] = {
+					isAdmin = aowl and aowl.CheckUserGroupFromSteamID(data.networkid, "developers"),
+					accountId = util.AccountIDFromSteamID and util.AccountIDFromSteamID(data.networkid),
+					nick = data.name .. " (joining)"
+				}
+			end
 		end
 
 		local wmap = cookie.GetString("wmap", "")
