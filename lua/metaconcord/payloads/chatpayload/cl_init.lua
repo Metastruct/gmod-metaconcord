@@ -16,10 +16,15 @@ net.Receive("metaconcordChatPayload", function()
 		-- Disgusting
 		roleColor = Color(tonumber("0x" .. hex:sub(1, 2)), tonumber("0x" .. hex:sub(3, 4)), tonumber("0x" .. hex:sub(5, 6)))
 	end
+
+	local pastellize = GetConVar("easychat_pastel")
+	if pastellize and pastellize:GetBool() and EasyChat.PastelizeNick then
+		roleColor = EasyChat.PastelizeNick(name)
+	end
+
 	if discord_postfix:GetBool() then
-		chat.AddText(roleColor, name, color_white, ": ".. content,gray, " [D]")
+		chat.AddText(roleColor, name, color_white, ": " .. content,gray, " [D]")
 	else
 		chat.AddText(gray, "[Discord] ", roleColor, name, color_white, ": ", content)
 	end
-	
 end)
