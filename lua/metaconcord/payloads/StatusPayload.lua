@@ -16,7 +16,7 @@ function StatusPayload:__call(socket)
 
 	local UndecorateNick = UndecorateNick or function(...) return ... end
 	_G.DevsToHide = _G.DevsToHide or {}
-	
+
 	function self:updateStatus()
 		local players = player.GetAll()
 		local list = {}
