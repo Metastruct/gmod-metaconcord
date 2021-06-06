@@ -12,6 +12,14 @@ end
 function RconPayload:__gc()
 end
 
+local function stringifyTable(tbl)
+	for k, v in pairs(tbl) do
+		tbl[k] = tostring(v)
+	end
+
+	return tbl
+end
+
 local function createExecutionContext() 
 	local ctx = {
 		stdout = "",
@@ -22,11 +30,7 @@ local function createExecutionContext()
 	local function stdout(func, options, ...)
 		options = options or {}
 
-		local args = { ... }
-		for i, arg in pairs(args) do
-			args[i] = tostring(arg)
-		end
-
+		local args = stringifyTable({ ... })
 		local out = table.concat({ ... }, options.concatenator);
 		ctx.stdout = ctx.stdout .. out
 		if options.newline then
@@ -37,11 +41,7 @@ local function createExecutionContext()
 	end
 
 	local function stderr(func, ...)
-		local args = { ... }
-		for _, arg in pairs(args) do
-			table.insert(ctx.errors, tostring(arg))
-		end
-
+		ctx.errors = stringifyTable({ ... })
 		func(...)
 	end
 
@@ -89,17 +89,17 @@ function RconPayload:handle(data)
 			elseif isfunction(func) then
 				local ret = { pcall(func) }
 				if table.remove(ret, 1) == true then
-					ctx.returns = ret
+					ctx.returns = stringifyTable(ret)
 				else
-					table.insert(ctx.errors, ret[1])
+					table.insert(ctx.errors, tostring(ret[1]))
 				end
 			end
 		elseif luadev and data.realm == "sh" then
 			local succ, ret = luadev.RunOnShared(data.code, runnerLog)
 			if not succ then
-				table.insert(ctx.errors, ret)
+				table.insert(ctx.errors, tostring(ret))
 			else
-				ctx.returns = ret
+				ctx.returns = stringifyTable(ret)
 			end
 
 			ctx.stdout = "stdout not available in shared mode"
