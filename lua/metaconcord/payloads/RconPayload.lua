@@ -86,7 +86,7 @@ function RconPayload:handle(data)
 			local func = CompileString(data.code, runnerLog, false)
 			if isstring(func) then
 				table.insert(ctx.errors, ("Syntax error: %s"):format(func))
-			elseif isfunction(func)
+			elseif isfunction(func) then
 				local ret = { pcall(func) }
 				if table.remove(ret, 1) == true then
 					ctx.returns = ret
