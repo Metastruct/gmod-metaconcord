@@ -50,13 +50,13 @@ local function createExecutionContext()
 			stdout(print, { concatenator = "\t", newline = true, }, ...) 
 		end,
 		Msg = function(...) 
-			stdout(Msg, nil ...) 
-		end,
-		MsgC = function(...) 
 			stdout(Msg, nil, ...) 
 		end,
+		MsgC = function(...) 
+			stdout(MsgC, nil, ...) 
+		end,
 		MsgN = function(...) 
-			stdout(Msg, { newline = true }, ...)  
+			stdout(MsgN, { newline = true }, ...)  
 		end,
 		ErrorNoHalt = function(...)
 			stderr(ErrorNoHalt, ...)
