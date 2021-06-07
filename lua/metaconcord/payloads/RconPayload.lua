@@ -87,7 +87,7 @@ function RconPayload:handle(data)
 			if isstring(func) then
 				table.insert(ctx.errors, ("Syntax error: %s"):format(func))
 			elseif isfunction(func) then
-				local ret = { pcall(func) }
+				local ret = { pcall(setfenv(func, ctx.env)) }
 				if table.remove(ret, 1) == true then
 					ctx.returns = stringifyTable(ret)
 				else
