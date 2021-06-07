@@ -20,7 +20,7 @@ local function stringifyTable(tbl)
 	return tbl
 end
 
-local function createExecutionContext() 
+local function createExecutionContext()
 	local ctx = {
 		stdout = "",
 		errors = {},
@@ -31,7 +31,7 @@ local function createExecutionContext()
 		options = options or {}
 
 		local args = stringifyTable({ ... })
-		local out = table.concat({ ... }, options.concatenator);
+		local out = table.concat(args, options.concatenator);
 		ctx.stdout = ctx.stdout .. out
 		if options.newline then
 			ctx.stdout = ctx.stdout .. "\n"
@@ -46,17 +46,17 @@ local function createExecutionContext()
 	end
 
 	ctx.env = setmetatable({
-		print = function(...) 
-			stdout(print, { concatenator = "\t", newline = true, }, ...) 
+		print = function(...)
+			stdout(print, { concatenator = "\t", newline = true, }, ...)
 		end,
-		Msg = function(...) 
-			stdout(Msg, nil, ...) 
+		Msg = function(...)
+			stdout(Msg, nil, ...)
 		end,
-		MsgC = function(...) 
-			stdout(MsgC, nil, ...) 
+		MsgC = function(...)
+			stdout(MsgC, nil, ...)
 		end,
-		MsgN = function(...) 
-			stdout(MsgN, { newline = true }, ...)  
+		MsgN = function(...)
+			stdout(MsgN, { newline = true }, ...)
 		end,
 		ErrorNoHalt = function(...)
 			stderr(ErrorNoHalt, ...)
@@ -109,7 +109,7 @@ function RconPayload:handle(data)
 		else
 			print(("Unknown realm '%s' for metaconcord lua payload by %s"):format(data.realm, data.runner))
 		end
-	
+
 		self:write({
 			identifier = data.identifier,
 			returns = ctx.returns,
