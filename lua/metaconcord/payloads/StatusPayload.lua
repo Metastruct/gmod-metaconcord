@@ -25,6 +25,7 @@ function StatusPayload:__call(socket)
 			if not ply:IsBot() and not _G.DevsToHide[ply:SteamID()] then
 				list[#list + 1] = {
 					isAdmin = ply:IsAdmin(),
+					isBanned = ply.IsBanned and ply:IsBanned() or false,
 					accountId = ply:AccountID(),
 					avatar = ply.SteamCache and ply:SteamCache() and ply:SteamCache().avatarfull,
 					nick = UndecorateNick(ply:Nick())
@@ -36,6 +37,7 @@ function StatusPayload:__call(socket)
 			if not _G.DevsToHide[data.networkid] then
 				list[#list + 1] = {
 					isAdmin = aowl and aowl.CheckUserGroupFromSteamID(data.networkid, "developers"),
+					isBanned = banni and banni.dataexists(data.networkid) or false,
 					accountId = util.AccountIDFromSteamID and util.AccountIDFromSteamID(data.networkid),
 					nick = data.name .. " (joining)"
 				}
