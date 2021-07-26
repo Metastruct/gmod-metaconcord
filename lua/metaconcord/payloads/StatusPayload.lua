@@ -26,6 +26,7 @@ function StatusPayload:__call(socket)
 				list[#list + 1] = {
 					isAdmin = ply:IsAdmin(),
 					isBanned = ply.IsBanned and ply:IsBanned() or false,
+					isAfk = ply.IsAFK and ply:IsAFK() or false,
 					accountId = ply:AccountID(),
 					avatar = ply.SteamCache and ply:SteamCache() and ply:SteamCache().avatarfull,
 					nick = UndecorateNick(ply:Nick())
