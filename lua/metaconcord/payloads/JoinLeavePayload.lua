@@ -7,9 +7,12 @@ JoinLeavePayload.name = "JoinLeavePayload"
 function JoinLeavePayload:__call(socket)
 	self.super.__call(self, socket)
 
+	_G.DevsToHide = _G.DevsToHide or {}
 	local UndecorateNick = UndecorateNick or function(...) return ... end
 
 	hook.Add("PlayerLeave", self, function(_, nick, userId, steamId, reason)
+		if _G.DevsToHide[steamId] then return end
+
 		local ply = Player(userId)
 		if (IsValid(ply) and ply:IsBot()) or not steamId:match("STEAM_0:%d+:%d+") then return end
 
@@ -24,6 +27,7 @@ function JoinLeavePayload:__call(socket)
 
 	hook.Add("PlayerInitialSpawn", self, function(_, ply)
 		if ply:IsBot() then return end
+		if _G.DevsToHide[ply:SteamID()] then return end
 
 		self:write({
 			player = {
