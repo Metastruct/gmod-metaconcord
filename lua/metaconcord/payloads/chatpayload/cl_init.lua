@@ -28,14 +28,14 @@ net.Receive("metaconcordChatPayload", function()
 	end
 
 	if discord_postfix:GetBool() then
-		if replied_name then
-			chat.AddText(roleColor, name, gray, " [replying to: ", replied_color, replied_name, gray, "]", color_white, ": " .. content, gray, " [D]")
+		if replied_name ~= "" then
+			chat.AddText(roleColor, name, gray, " [replying to: ", replied_roleColor, replied_name, gray, "]", color_white, ": " .. content, gray, " [D]")
 		else
 			chat.AddText(roleColor, name, color_white, ": " .. content, gray, " [D]")
 		end
 	else
-		if replied_name then
-			chat.AddText(gray, "[Discord] ", roleColor, name, gray, " [replying to: ", replied_color, replied_name, gray, "]", color_white, ": ", content)
+		if replied_name ~= "" then
+			chat.AddText(gray, "[Discord] ", roleColor, name, gray, " [replying to: ", replied_roleColor, replied_name, gray, "]", color_white, ": ", content)
 		else
 			chat.AddText(gray, "[Discord] ", roleColor, name, color_white, ": ", content)
 		end
