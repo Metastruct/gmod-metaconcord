@@ -5,20 +5,20 @@ BanPayload.super = Payload
 BanPayload.name = "BanPayload"
 local UndecorateNick = UndecorateNick or function(...) return ... end
 
-local function getPlayerNick(steamId)
-  local ply
+local function getPlayerNick(ply)
+  if type(ply) == "string" and ply:match("^STEAM_0:%d:%d*$") then
+    local _ply = player.GetBySteamID(ply)
 
-  if type(steamId) == "string" and steamId:match("^STEAM_0:1") then
-    ply = player.GetBySteamID(steamId)
-
-    if IsValid(ply) then
-      return UndecorateNick(banner:Nick())
-    elseif playerseen then
-      local seenEntry = playerseen.GetPlayerBySteamID(ply)
-      if seenEntry and seenEntry[1] then return seenEntry[1].nick or steamId end
-    else
-      return steamId
+    if IsValid(_ply) then
+      ply = _ply
     end
+  end
+
+  if IsValid(ply) then
+    return UndecorateNick(ply:Nick())
+  elseif playerseen then
+    local seenEntry = playerseen.GetPlayerBySteamID(ply)
+    if seenEntry and seenEntry[1] then return seenEntry[1].nick or ply end
   end
 
   return "???"
