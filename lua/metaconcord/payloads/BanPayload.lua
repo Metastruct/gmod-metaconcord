@@ -18,7 +18,7 @@ local function getPlayerNick(ply)
     return UndecorateNick(ply:Nick())
   elseif playerseen then
     local seenEntry = playerseen.GetPlayerBySteamID(ply)
-    if seenEntry and seenEntry[1] then return seenEntry[1].nick or ply end
+    if seenEntry and seenEntry[1] then return UndecorateNick(seenEntry[1].nick) or ply end
   end
 
   return "???"
