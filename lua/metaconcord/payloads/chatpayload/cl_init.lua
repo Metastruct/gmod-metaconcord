@@ -35,7 +35,7 @@ net.Receive("metaconcordChatPayload", function()
 		end
 	else
 		if replied_name then
-			chat.AddText(gray, "[Discord] ", roleColor, name, gray, " [replying to: ", replied_color, replied_name, gray. "]" color_white, ": ", content)
+			chat.AddText(gray, "[Discord] ", roleColor, name, gray, " [replying to: ", replied_color, replied_name, gray, "]", color_white, ": ", content)
 		else
 			chat.AddText(gray, "[Discord] ", roleColor, name, color_white, ": ", content)
 		end
