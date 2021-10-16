@@ -1,6 +1,7 @@
 util.AddNetworkString("metaconcordChatPayload")
 local Payload = include("../Payload.lua")
 local ChatPayload = table.Copy(Payload)
+local blurple = 7506394
 ChatPayload.__index = ChatPayload
 ChatPayload.super = Payload
 ChatPayload.name = "ChatPayload"
@@ -46,7 +47,7 @@ function ChatPayload:handle(data)
 	net.WriteInt(data.user.color, 25)
 	net.WriteString(ret)
 	net.WriteString(data.replied_message and data.replied_message.nick or "")
-	net.WriteInt(data.replied_message and data.replied_message.color or 0, 25)
+	net.WriteInt(data.replied_message and data.replied_message.color or blurple, 25)
 	net.WriteString(data.replied_message and data.replied_message.content or "")
 	net.Broadcast()
 end
