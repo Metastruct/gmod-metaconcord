@@ -49,8 +49,8 @@ function ChatPayload:handle(data)
 	net.WriteString(ret)
 	net.WriteString(data.replied_message and data.replied_message.user.nick or "")
 	net.WriteInt(data.replied_message and data.replied_message.user.color or blurple, 25)
-	net.WriteString(data.replied_message and data.replied_message.user.content or "")
 	net.WriteString(data.replied_message and data.replied_message.user.avatar_url or "")
+	net.WriteString(data.replied_message and data.replied_message.user.content or "")
 	net.Broadcast()
 end
 
