@@ -14,5 +14,5 @@ net.Receive("metaconcordChatPayload", function()
 		color = replied_color,
 		content = replied_content,
 		avatar_url = replied_avatar_url
-	}
+	})
 end)
