@@ -9,10 +9,12 @@ net.Receive("metaconcordChatPayload", function()
 	local replied_avatar_url = net.ReadString()
 	local replied_content = net.ReadString()
 
+	local msgID = net.ReadString()
+
 	hook.Run("DiscordSay", name, content, color, avatar_url, {
 		name = replied_name,
 		color = replied_color,
 		content = replied_content,
 		avatar_url = replied_avatar_url
-	})
+	}, msgID)
 end)
