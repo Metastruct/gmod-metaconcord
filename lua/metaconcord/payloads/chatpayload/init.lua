@@ -36,7 +36,7 @@ function ChatPayload:__gc()
 end
 
 function ChatPayload:handle(data)
-	local ret = hook.Run("DiscordSay", data.user.nick, data.content, data.replied_message)
+	local ret = hook.Run("DiscordSay", data.user.nick, data.content, data.replied_message, data.msgID)
 	if ret == false then return end
 
 	ret = isstring(ret) and ret or data.content
@@ -51,6 +51,7 @@ function ChatPayload:handle(data)
 	net.WriteInt(data.replied_message and data.replied_message.user.color or blurple, 25)
 	net.WriteString(data.replied_message and data.replied_message.user.avatar_url or "")
 	net.WriteString(data.replied_message and data.replied_message.user.content or "")
+	net.WriteString(data.msgID)
 	net.Broadcast()
 end
 
