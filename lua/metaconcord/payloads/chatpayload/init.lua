@@ -37,10 +37,10 @@ end
 
 function ChatPayload:handle(data)
 	local ret = hook.Run("DiscordSay", {
-			id = data.user.id
-			name = data.user.nick
-			color = data.user.color
-			avatar_url = data.user.avatar_url
+			id = data.user.id,
+			name = data.user.nick,
+			color = data.user.color,
+			avatar_url = data.user.avatar_url,
 		},
 		data.content,
 		data.msgID,
