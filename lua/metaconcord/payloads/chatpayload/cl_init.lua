@@ -12,7 +12,7 @@ net.Receive("metaconcordChatPayload", function()
 	hook.Run("DiscordSay", {
 			id = id,
 			name = name,
-			color = Color,
+			color = color,
 			avatar_url = avatar_url,
 		},
 		content,
