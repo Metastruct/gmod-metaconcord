@@ -44,7 +44,7 @@ function ChatPayload:handle(data)
 		},
 		data.content,
 		data.msgID,
-		data.replied_message,
+		data.replied_message
 		)
 
 	if ret == false then return end
