@@ -36,22 +36,32 @@ function ChatPayload:__gc()
 end
 
 function ChatPayload:handle(data)
-	local ret = hook.Run("DiscordSay", data.user.nick, data.content, data.replied_message, data.msgID)
+	local ret = hook.Run("DiscordSay", {
+			id = data.user.id
+			name = data.user.nick
+			color = data.user.color
+			avatar_url = data.user.avatar_url
+		},
+		data.content,
+		data.msgID,
+		data.replied_message,
+		)
+
 	if ret == false then return end
 
 	ret = isstring(ret) and ret or data.content
 	if ret == "" then return end
 
 	net.Start("metaconcordChatPayload")
+	net.WriteString(data.user.id)
 	net.WriteString(data.user.nick)
 	net.WriteInt(data.user.color, 25)
 	net.WriteString(data.user.avatar_url)
 	net.WriteString(ret)
-	net.WriteString(data.replied_message and data.replied_message.user.nick or "")
-	net.WriteInt(data.replied_message and data.replied_message.user.color or blurple, 25)
-	net.WriteString(data.replied_message and data.replied_message.user.avatar_url or "")
-	net.WriteString(data.replied_message and data.replied_message.user.content or "")
 	net.WriteString(data.msgID)
+	net.WriteString(data.replied_message and data.replied_message.content or "")
+	net.WriteString(data.replied_message and data.replied_message.msgID or "")
+	net.WriteBool(data.replied_message and data.replied_message.ingame)
 	net.Broadcast()
 end
 
