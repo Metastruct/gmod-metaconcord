@@ -9,7 +9,7 @@ function NotificationPayload:__call(socket)
 
 end
 
-local filter = ["rank"]
+local filter = {"rank"}
 
 function NotificationPayload:__gc()
 	hook.Add("AowlMessage", self, function(cmd, line)
