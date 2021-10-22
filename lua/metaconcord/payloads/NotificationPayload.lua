@@ -1,8 +1,10 @@
 local Payload = include("./Payload.lua")
-local NotificationPayload = table.copy(Payload)
+local NotificationPayload = table.Copy(Payload)
 NotificationPayload.__index = NotificationPayload
 NotificationPayload.super = Payload
 NotificationPayload.name = "NotificationPayload"
+
+local filter = {"rank"}
 
 function NotificationPayload:__call(socket)
 	self.super.__call(self, socket)
@@ -15,8 +17,6 @@ function NotificationPayload:__call(socket)
 		-- end
 	end)
 end
-
-local filter = {"rank"}
 
 function NotificationPayload:__gc()
 	hook.Remove("AowlMessage", self)
