@@ -5,9 +5,9 @@ NotificationPayload.super = Payload
 NotificationPayload.name = "NotificationPayload"
 
 local filter = {
-	"rank" = true,
-	"tmpdev" = true,
-	"psa" = true
+	rank = true,
+	tmpdev = true,
+	psa = true
 }
 
 function NotificationPayload:__call(socket)
