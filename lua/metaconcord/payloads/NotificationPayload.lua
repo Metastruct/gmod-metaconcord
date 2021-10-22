@@ -6,12 +6,6 @@ NotificationPayload.name = "NotificationPayload"
 
 function NotificationPayload:__call(socket)
 	self.super.__call(self, socket)
-
-end
-
-local filter = {"rank"}
-
-function NotificationPayload:__gc()
 	hook.Add("AowlMessage", self, function(cmd, line)
 		-- if filter[cmd] then
 			self:write({
@@ -20,6 +14,12 @@ function NotificationPayload:__gc()
 			})
 		-- end
 	end)
+end
+
+local filter = {"rank"}
+
+function NotificationPayload:__gc()
+	hook.Remove("AowlMessage", self)
 end
 
 return setmetatable({}, NotificationPayload)
