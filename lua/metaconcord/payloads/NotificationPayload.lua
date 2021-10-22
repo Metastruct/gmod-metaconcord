@@ -4,17 +4,17 @@ NotificationPayload.__index = NotificationPayload
 NotificationPayload.super = Payload
 NotificationPayload.name = "NotificationPayload"
 
-local filter = {"rank"}
+local filter = {"rank", "tmpdev", "PSA"}
 
 function NotificationPayload:__call(socket)
 	self.super.__call(self, socket)
 	hook.Add("AowlMessage", self, function(cmd, line)
-		-- if filter[cmd] then
+		if filter[cmd] then
 			self:write({
 				title = "aowl",
-				message = ("%s\n%s"):format((cmd or ""):upper(), line)
+				message = ("%s\n%s"):format((tostring(cmd) or ""):upper(), line)
 			})
-		-- end
+		end
 	end)
 end
 
