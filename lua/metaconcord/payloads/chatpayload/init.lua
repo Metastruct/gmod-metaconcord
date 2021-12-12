@@ -1,7 +1,7 @@
 util.AddNetworkString("metaconcordChatPayload")
 local Payload = include("../Payload.lua")
 local ChatPayload = table.Copy(Payload)
-local blurple = 7506394
+--local blurple = 7506394
 ChatPayload.__index = ChatPayload
 ChatPayload.super = Payload
 ChatPayload.name = "ChatPayload"
@@ -13,11 +13,15 @@ function ChatPayload:__call(socket)
 	hook.Add("PlayerSay", self, function(_, ply, message, isTeamChat, isLocalChat)
 		if isLocalChat then return end
 		if ply.IsBanned and ply:IsBanned() then return end
-		message = message:gsub("<.-=.->", "")
+
+		-- if it doesnt exist then markup doesnt exist so why bother anyway
+		if ec_markup then
+			message = ec_markup.GetText(message)
+		end
+
 		message = message:gsub("/me%s+", "")
-		message = message:gsub("<stop>", "")
-		message = message:Trim()
-		if message == "" then return end
+		message = EasyChat and EasyChat.ExtendedStringTrim(message) or message:Trim()
+		if #message == 0 then return end
 
 		self:write({
 			player = {
@@ -45,7 +49,7 @@ function ChatPayload:handle(data)
 		data.content,
 		data.msgID,
 		data.replied_message
-		)
+	)
 
 	if ret == false then return end
 
