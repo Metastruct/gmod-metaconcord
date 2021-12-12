@@ -44,7 +44,7 @@ local COLOR_PRINT_CHAT_TIME = Color(0, 161, 255)
 local COLOR_PRINT_CHAT_HEADER = Color(114, 137, 218)
 local COLOR_PRINT_CHAT_NICK = Color(222, 222, 255)
 local COLOR_PRINT_CHAT_MSG = Color(255, 255, 255)
-function print_chat_msg(nickname, msg)
+local function print_chat_msg(nickname, msg)
 	local print_args = {}
 
 	table.insert(print_args, COLOR_PRINT_CHAT_TIME)
