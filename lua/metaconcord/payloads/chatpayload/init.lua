@@ -39,6 +39,29 @@ function ChatPayload:__gc()
 	hook.Remove("PlayerSay", self)
 end
 
+local msgc_native = _G._MsgC or _G.MsgC -- epoe compat
+local COLOR_PRINT_CHAT_TIME = Color(0, 161, 255)
+local COLOR_PRINT_CHAT_HEADER = Color(114, 137, 218)
+local COLOR_PRINT_CHAT_NICK = Color(222, 222, 255)
+local COLOR_PRINT_CHAT_MSG = Color(255, 255, 255)
+function print_chat_msg(nickname, msg)
+	local print_args = {}
+
+	table.insert(print_args, COLOR_PRINT_CHAT_TIME)
+	table.insert(print_args, os.date("!%H:%M:%S "))
+
+	table.insert(print_args, COLOR_PRINT_CHAT_HEADER)
+	table.insert(print_args, "[DISCORD] ")
+
+	table.insert(print_args, COLOR_PRINT_CHAT_NICK)
+	table.insert(print_args, nickname)
+
+	table.insert(print_args, COLOR_PRINT_CHAT_MSG)
+	table.insert(print_args, (": %s\n"):format(msg))
+
+	msgc_native(unpack(print_args))
+end
+
 function ChatPayload:handle(data)
 	local ret = hook.Run("DiscordSay", {
 			id = data.user.id,
@@ -55,6 +78,8 @@ function ChatPayload:handle(data)
 
 	ret = isstring(ret) and ret or data.content
 	if ret == "" then return end
+
+	print_chat_msg(data.user.nick, ret)
 
 	net.Start("metaconcordChatPayload")
 	net.WriteString(data.user.id)
