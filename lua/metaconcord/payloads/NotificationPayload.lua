@@ -12,7 +12,7 @@ local filter = {
 
 function NotificationPayload:__call(socket)
 	self.super.__call(self, socket)
-	hook.Add("AowlMessage", self, function(cmd, line)
+	hook.Add("AowlMessage", self, function(_, cmd, line)
 		if filter[tostring(cmd):lower()] then
 			self:write({
 				title = "aowl",
