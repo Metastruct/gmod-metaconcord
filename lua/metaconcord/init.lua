@@ -41,7 +41,7 @@ function metaconcord.connect()
 		metaconcord.print("Connected.")
 		backoff = 0
 
-		for _, script in next, (file.Find(path:format("*.lua"), "LUA")) do
+		for _, script in pairs(file.Find(path:format("*.lua"), "LUA")) do
 			local name = string.StripExtension(script)
 
 			if name ~= "Payload" then
@@ -115,6 +115,14 @@ end
 function metaconcord.start()
 	retry = true
 	metaconcord.connect()
+
+	timer.Create("metaconcord.PeriodicChecks", 60, 0, function()
+		if not metaconcord.socket or not metaconcord.socket:isConnected() then
+			metaconcord.print("Lost connection, reconnecting...")
+			metaconcord.stop()
+			metaconcord.start()
+		end
+	end)
 end
 
 function metaconcord.stop()
