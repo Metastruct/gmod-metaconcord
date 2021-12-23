@@ -116,7 +116,8 @@ function metaconcord.start()
 	retry = true
 	metaconcord.connect()
 
-	timer.Create("metaconcord.PeriodicChecks", 60, 0, function()
+	-- every 10 mins
+	timer.Create("metaconcord.PeriodicChecks", 60 * 60 * 10, 0, function()
 		if not metaconcord.socket or not metaconcord.socket:isConnected() then
 			metaconcord.print("Lost connection, reconnecting...")
 			metaconcord.stop()
