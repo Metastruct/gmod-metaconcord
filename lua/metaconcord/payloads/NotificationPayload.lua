@@ -23,7 +23,7 @@ function NotificationPayload:__call(socket)
 	hook.Add("OnPlayerVoteKicked", self, function(kicked, caller, reason)
 		self:write({
 			title = "votekick",
-			message = ("%s got votekicked by %s\nreason: ```%s```"):format(aowlNiceCallerName(kicked), aowlNiceCallerName(kicked), reason)
+			message = ("%s got votekicked by %s\nreason: ```%s```"):format(aowlNiceCallerName(kicked), aowlNiceCallerName(caller), reason)
 		})
 	end)
 end
