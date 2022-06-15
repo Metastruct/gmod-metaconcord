@@ -81,8 +81,8 @@ function StatusPayload:__call(socket)
 		end)
 	end
 
-	local function remove(self, data)
-		if not connecting[data.userid] then return end
+	local function remove(self, data, force)
+		if not connecting[data.userid] and not force then return end
 		connecting[data.userid] = nil
 
 		timer.Simple(0, function()
@@ -92,7 +92,7 @@ function StatusPayload:__call(socket)
 
 	hookAndListen("player_connect", self, add)
 	hookAndListen("player_spawn", self, remove)
-	hookAndListen("player_disconnect", self, remove)
+	hookAndListen("player_disconnect", self, remove, true)
 
 	return self
 end
