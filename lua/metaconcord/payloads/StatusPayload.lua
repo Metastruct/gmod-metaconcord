@@ -75,13 +75,19 @@ function StatusPayload:__call(socket)
 
 	local function add(self, data)
 		connecting[data.userid] = data
-		self:updateStatus()
+
+		timer.Simple(0, function()
+			self:updateStatus()
+		end)
 	end
 
 	local function remove(self, data)
 		if not connecting[data.userid] then return end
 		connecting[data.userid] = nil
-		self:updateStatus()
+
+		timer.Simple(0, function()
+			self:updateStatus()
+		end)
 	end
 
 	hookAndListen("player_connect", self, add)
