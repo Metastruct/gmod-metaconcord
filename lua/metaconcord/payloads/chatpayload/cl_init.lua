@@ -7,7 +7,7 @@ net.Receive("metaconcordChatPayload", function()
 	local msgID = net.ReadString()
 	local replied_content = net.ReadString()
 	local replied_msgID = net.ReadString()
-	local replied_ingame = net.ReadBool()
+	local replied_ingameName = net.ReadString()
 
 	hook.Run("DiscordSay", {
 			id = id,
@@ -20,7 +20,7 @@ net.Receive("metaconcordChatPayload", function()
 		{
 			msgID = replied_msgID,
 			content = replied_content,
-			ingame = replied_ingame,
+			ingame = replied_ingameName,
 		}
 	)
 end)

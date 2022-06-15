@@ -90,7 +90,7 @@ function ChatPayload:handle(data)
 	net.WriteString(data.msgID)
 	net.WriteString(data.replied_message and data.replied_message.content or "")
 	net.WriteString(data.replied_message and data.replied_message.msgID or "")
-	net.WriteBool(data.replied_message and data.replied_message.ingame)
+	net.WriteString(data.replied_message and data.replied_message.ingameName or "")
 	net.Broadcast()
 end
 
