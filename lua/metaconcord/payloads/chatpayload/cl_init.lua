@@ -20,7 +20,7 @@ net.Receive("metaconcordChatPayload", function()
 		{
 			msgID = replied_msgID,
 			content = replied_content,
-			ingame = replied_ingameName,
+			ingameName = replied_ingameName,
 		}
 	)
 end)
