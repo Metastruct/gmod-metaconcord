@@ -20,10 +20,17 @@ function NotificationPayload:__call(socket)
 			})
 		end
 	end)
+	hook.Add("OnPlayerVoteKicked", self, function(kicked, caller, reason)
+		self:write({
+			title = "votekick",
+			message = ("%s got votekicked by %s\nreason: ```%s```"):format(aowlNiceCallerName(kicked), aowlNiceCallerName(kicked), reason)
+		})
+	end)
 end
 
 function NotificationPayload:__gc()
 	hook.Remove("AowlMessage", self)
+	hook.Remove("OnPlayerVoteKicked", self)
 end
 
 return setmetatable({}, NotificationPayload)
