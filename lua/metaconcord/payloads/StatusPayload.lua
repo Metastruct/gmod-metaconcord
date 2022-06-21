@@ -92,7 +92,7 @@ function StatusPayload:__call(socket)
 
 	hookAndListen("player_connect", self, add)
 	hookAndListen("player_spawn", self, remove)
-	hookAndListen("player_disconnect", self, self.updateStatus)
+	hookAndListen("player_disconnect", self, remove)
 
 	return self
 end
