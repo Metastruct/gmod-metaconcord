@@ -82,7 +82,7 @@ function StatusPayload:__call(socket)
 	end
 
 	local function remove(self, data)
-		if not connecting[data.userid] then return end
+		if not connecting[data.userid] and not data.reason then return end
 		connecting[data.userid] = nil
 
 		timer.Simple(0, function()
