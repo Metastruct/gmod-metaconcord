@@ -20,7 +20,7 @@ function NotificationPayload:__call(socket)
 			})
 		end
 	end)
-	hook.Add("OnPlayerVoteKicked", self, function(kicked, caller, reason)
+	hook.Add("OnPlayerVoteKicked", self, function(_, kicked, caller, reason)
 		-- how annoying, shit is gonna break if it's invalid but who cares
 		local kicked = player.GetBySteamID(kicked)
 		local caller = player.GetBySteamID(caller)
