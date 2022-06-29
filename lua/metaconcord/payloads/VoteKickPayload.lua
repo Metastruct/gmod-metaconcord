@@ -31,11 +31,11 @@ function VoteKickPayload:__call(socket)
 	self:write({
 	  offender = {
 		nick = getPlayerNick(offenderSteamID),
-		steamId = offenderSteamID,
+		steamID = offenderSteamID,
 	  },
 	  reporter = {
 		nick = getPlayerNick(reporterSteamID),
-		steamId = reporterSteamID,
+		steamID = reporterSteamID,
 	  },
 	  reason = reason
 	})
@@ -44,11 +44,11 @@ function VoteKickPayload:__call(socket)
 	self:write({
 	  offender = {
 		nick = getPlayerNick(offenderSteamID),
-		steamId = offenderSteamID,
+		steamID = offenderSteamID,
 	  },
 	  reporter = {
 		nick = getPlayerNick(reporterSteamID),
-		steamId = reporterSteamID,
+		steamID = reporterSteamID,
 	  },
 	  reason = reason,
 	  success = true
@@ -58,11 +58,11 @@ function VoteKickPayload:__call(socket)
 	self:write({
 	  offender = {
 		nick = getPlayerNick(offenderSteamID),
-		steamId = offenderSteamID,
+		steamID = offenderSteamID,
 	  },
 	  reporter = {
 		nick = getPlayerNick(reporterSteamID),
-		steamId = reporterSteamID,
+		steamID = reporterSteamID,
 	  },
 	  reason = reason,
 	  success = false
