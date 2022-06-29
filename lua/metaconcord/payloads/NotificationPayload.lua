@@ -20,20 +20,10 @@ function NotificationPayload:__call(socket)
 			})
 		end
 	end)
-	hook.Add("OnPlayerVoteKicked", self, function(_, kicked, caller, reason)
-		-- how annoying, shit is gonna break if it's invalid but who cares
-		local kicked = player.GetBySteamID(kicked)
-		local caller = player.GetBySteamID(caller)
-		self:write({
-			title = "votekick",
-			message = ("%s got votekicked by %s\nreason: ```%s```"):format(aowlNiceCallerName(kicked), aowlNiceCallerName(caller), reason)
-		})
-	end)
 end
 
 function NotificationPayload:__gc()
 	hook.Remove("AowlMessage", self)
-	hook.Remove("OnPlayerVoteKicked", self)
 end
 
 return setmetatable({}, NotificationPayload)
