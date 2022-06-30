@@ -8,7 +8,6 @@ ChatPayload.name = "ChatPayload"
 
 function ChatPayload:__call(socket)
 	self.super.__call(self, socket)
-	local UndecorateNick = UndecorateNick or function(...) return ... end
 
 	hook.Add("PlayerSay", self, function(_, ply, message, isTeamChat, isLocalChat)
 		if isLocalChat then return end
@@ -25,7 +24,7 @@ function ChatPayload:__call(socket)
 
 		self:write({
 			player = {
-				nick = UndecorateNick(ply:Nick()),
+				nick = ply:Nick(),
 				steamId64 = ply:SteamID64()
 			},
 			content = message

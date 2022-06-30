@@ -3,7 +3,6 @@ local BanPayload = table.Copy(Payload)
 BanPayload.__index = BanPayload
 BanPayload.super = Payload
 BanPayload.name = "BanPayload"
-local UndecorateNick = UndecorateNick or function(...) return ... end
 
 local function getPlayerNick(ply)
   if type(ply) == "string" and ply:match("^STEAM_0:%d:%d*$") then
@@ -15,10 +14,10 @@ local function getPlayerNick(ply)
   end
 
   if IsValid(ply) then
-    return UndecorateNick(ply:Nick())
+    return ply:Nick()
   elseif playerseen then
     local seenEntry = playerseen.GetPlayerBySteamID(ply)
-    if seenEntry and seenEntry[1] then return UndecorateNick(seenEntry[1].nick) or ply end
+    if seenEntry and seenEntry[1] then return seenEntry[1].nick or ply end
   end
 
   return "???"
