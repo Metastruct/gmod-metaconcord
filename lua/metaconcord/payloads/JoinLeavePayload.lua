@@ -8,7 +8,6 @@ function JoinLeavePayload:__call(socket)
 	self.super.__call(self, socket)
 
 	_G.DevsToHide = _G.DevsToHide or {}
-	local UndecorateNick = UndecorateNick or function(...) return ... end
 
 	hook.Add("PlayerLeave", self, function(_, nick, userId, steamId, reason)
 		if _G.DevsToHide[steamId] then return end
@@ -18,7 +17,7 @@ function JoinLeavePayload:__call(socket)
 
 		self:write({
 			player = {
-				nick = UndecorateNick(IsValid(ply) and ply:Nick() or nick),
+				nick = IsValid(ply) and ply:Nick() or nick,
 				steamId64 = util.SteamIDTo64(steamId)
 			},
 			reason = reason
@@ -31,7 +30,7 @@ function JoinLeavePayload:__call(socket)
 
 		self:write({
 			player = {
-				nick = UndecorateNick(ply:Nick()),
+				nick = ply:Nick(),
 				steamId64 = ply:SteamID64()
 			},
 			spawned = true

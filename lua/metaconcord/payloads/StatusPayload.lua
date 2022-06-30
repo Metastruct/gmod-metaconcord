@@ -14,7 +14,6 @@ local connecting = {}
 function StatusPayload:__call(socket)
 	self.super.__call(self, socket)
 
-	local UndecorateNick = UndecorateNick or function(...) return ... end
 	_G.DevsToHide = _G.DevsToHide or {}
 
 	function self:updateStatus()
@@ -29,7 +28,7 @@ function StatusPayload:__call(socket)
 					isAfk = ply.IsAFK and ply:IsAFK() or false,
 					accountId = ply:AccountID(),
 					avatar = ply.SteamCache and ply:SteamCache() and ply:SteamCache().avatarfull,
-					nick = UndecorateNick(ply:Nick())
+					nick = ply:Nick()
 				}
 			end
 		end
