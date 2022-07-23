@@ -37,7 +37,7 @@ function BanAppealPayload:__call(socket)
         steamId = steamId,
       },
       banReason = banreason,
-      appeal = appeal
+      appeal = appeal,
       unbanTime = tostring(unbanTime),
     })
   end)
