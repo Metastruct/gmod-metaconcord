@@ -29,13 +29,13 @@ function VoteKickPayload:__call(socket)
 	hook.Add("OnPlayerVoteKickRequested", self, function(_, offenderSteamID, reporterSteamID, reason)
 		self:write({
 			offender = {
-			nick = getPlayerNick(offenderSteamID),
-			steamID = offenderSteamID,
-		},
+				nick = getPlayerNick(offenderSteamID),
+				steamID = offenderSteamID,
+			},
 			reporter = {
-			nick = getPlayerNick(reporterSteamID),
-			steamID = reporterSteamID,
-		},
+				nick = getPlayerNick(reporterSteamID),
+				steamID = reporterSteamID,
+			},
 			reason = reason
 		})
 	end)
