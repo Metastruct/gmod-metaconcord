@@ -70,7 +70,11 @@ function StatusPayload:__call(socket)
 		})
 	end
 
-	self.onConnected = self.updateStatus
+	self.onConnected = function()
+			timer.Simple(0, function()
+				self:updateStatus()
+		end)
+	end
 
 	local function add(self, data)
 		connecting[data.userid] = data
@@ -92,13 +96,6 @@ function StatusPayload:__call(socket)
 	hookAndListen("player_connect", self, add)
 	hookAndListen("player_spawn", self, remove)
 	hookAndListen("player_disconnect", self, remove)
-
-	hook.Add("GetGameDescription", self, function()
-		timer.Simple(0, function()
-			self:updateStatus()
-		end)
-		hook.Remove("GetGameDescription", self)
-	end)
 
 	return self
 end
