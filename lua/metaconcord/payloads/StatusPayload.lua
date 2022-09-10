@@ -93,6 +93,13 @@ function StatusPayload:__call(socket)
 	hookAndListen("player_spawn", self, remove)
 	hookAndListen("player_disconnect", self, remove)
 
+	hook.Add("InitPostEntity", self, function()
+		timer.Simple(0, function()
+			self:updateStatus()
+		end)
+		hook.Remove("InitPostEntity", self)
+	end)
+
 	return self
 end
 
