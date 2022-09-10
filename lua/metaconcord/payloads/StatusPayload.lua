@@ -71,7 +71,7 @@ function StatusPayload:__call(socket)
 	end
 
 	self.onConnected = function()
-			timer.Simple(0, function()
+			timer.Simple(5, function()
 				self:updateStatus()
 		end)
 	end
