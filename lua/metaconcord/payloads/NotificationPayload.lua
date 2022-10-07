@@ -20,10 +20,21 @@ function NotificationPayload:__call(socket)
 			})
 		end
 	end)
+
+	hook.Add("DiscordNotification", self, function(_, msg)
+		self:write({
+			title = "aowl",
+			message = ("%s\n%s"):format((tostring(cmd) or ""):upper(), line)
+		})
+	end)
 end
 
 function NotificationPayload:__gc()
 	hook.Remove("AowlMessage", self)
+end
+
+function DiscordAdminNotification(msg)
+	hook.Run("DiscordNotification", msg)
 end
 
 return setmetatable({}, NotificationPayload)
