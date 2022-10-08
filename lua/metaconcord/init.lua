@@ -12,6 +12,10 @@ local retry = false
 local backoff = 0
 
 function metaconcord.print(...)
+	if metalog then
+		metalog.info("metaconcord", _, ...)
+		return
+	end
 	MsgC(headerCol, "[metaconcord] ", Color(255, 255, 255), ...)
 	Msg("\n")
 end
