@@ -18,7 +18,7 @@ local logCol = {
 
 function metaconcord.print(state, extra,...)
 	if metalog then
-		metalog.[state]("metaconcord", extra, ...)
+		metalog[state]("metaconcord", extra, ...)
 		return
 	end
 	MsgC(headerCol, "[metaconcord] ", logCol[state], ...)
