@@ -11,12 +11,17 @@ local headerCol = Color(53, 219, 166)
 local retry = false
 local backoff = 0
 
-function metaconcord.print(...)
+local logCol = {
+	["info"] = 	Color(255, 255, 255),
+	["error"] = Color(255, 0, 0)
+}
+
+function metaconcord.print(state, extra,...)
 	if metalog then
-		metalog.info("metaconcord", _, ...)
+		metalog.[state]("metaconcord", extra, ...)
 		return
 	end
-	MsgC(headerCol, "[metaconcord] ", Color(255, 255, 255), ...)
+	MsgC(headerCol, "[metaconcord] ", logCol[state], ...)
 	Msg("\n")
 end
 
@@ -38,11 +43,11 @@ function metaconcord.connect()
 	end
 
 	function socket:onError(err)
-		metaconcord.print("Error: ", Color(255, 0, 0), err)
+		metaconcord.print("error", "socket", err)
 	end
 
 	function socket:onConnected()
-		metaconcord.print("Connected.")
+		metaconcord.print("info", "socket", "Connected.")
 		backoff = 0
 
 		for _, script in pairs(file.Find(path:format("*.lua"), "LUA")) do
@@ -93,12 +98,12 @@ function metaconcord.connect()
 		end
 
 		metaconcord.socket = nil
-		metaconcord.print("Disconnected.")
+		metaconcord.print("info", "socket", "Disconnected.")
 		timer.Remove("metaconcord.Heartbeat")
 
 		timer.Create("metaconcord.Retry", math.min(2 ^ backoff, 60 * 5), 1, function()
 			if not retry then return end
-			metaconcord.print("Lost connection, reconnecting...")
+			metaconcord.print("info", "socket", "Lost connection, reconnecting...")
 			metaconcord.start()
 		end)
 
@@ -106,13 +111,13 @@ function metaconcord.connect()
 	end
 
 	metaconcord.socket = socket
-	metaconcord.print("Connecting...")
+	metaconcord.print("info", "socket", "Connecting...")
 	metaconcord.socket:open()
 end
 
 function metaconcord.disconnect()
 	if not metaconcord.socket or not metaconcord.socket:isConnected() then return end
-	metaconcord.print("Disconnecting...")
+	metaconcord.print("info", "socket", "Disconnecting...")
 	metaconcord.socket:close()
 end
 
@@ -123,7 +128,7 @@ function metaconcord.start()
 	-- every 10 mins
 	timer.Create("metaconcord.PeriodicChecks", 60 * 60 * 10, 0, function()
 		if not metaconcord.socket or not metaconcord.socket:isConnected() then
-			metaconcord.print("Lost connection, reconnecting...")
+			metaconcord.print("info", "socket", "Lost connection, reconnecting...")
 			metaconcord.stop()
 			metaconcord.start()
 		end
