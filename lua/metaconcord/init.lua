@@ -16,7 +16,7 @@ local logCol = {
 	["error"] = Color(255, 0, 0)
 }
 
-function metaconcord.print(state, extra,...)
+function metaconcord.print(state, extra, ...)
 	if metalog then
 		metalog[state]("metaconcord", extra, ...)
 		return
