@@ -12,7 +12,7 @@ local retry = false
 local backoff = 0
 
 local logCol = {
-	["info"] = 	Color(255, 255, 255),
+	["info"] = Color(255, 255, 255),
 	["error"] = Color(255, 0, 0)
 }
 
