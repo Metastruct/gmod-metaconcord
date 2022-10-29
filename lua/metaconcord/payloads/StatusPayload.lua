@@ -14,14 +14,15 @@ local connecting = {}
 function StatusPayload:__call(socket)
 	self.super.__call(self, socket)
 
-	_G.DevsToHide = _G.DevsToHide or {}
+	_G._dont_draw = _G._dont_draw or {}
+	local _dont_draw = _G._dont_draw
 
 	function self:updateStatus()
 		local players = player.GetAll()
 		local list = {}
 
 		for _, ply in next, players do
-			if not ply:IsBot() and not _G.DevsToHide[ply:SteamID()] then
+			if not ply:IsBot() and not _dont_draw[ply:SteamID()] then
 				list[#list + 1] = {
 					isAdmin = ply:IsAdmin(),
 					isBanned = ply.IsBanned and ply:IsBanned() or false,
@@ -34,7 +35,7 @@ function StatusPayload:__call(socket)
 		end
 
 		for _, data in next, connecting do
-			if not _G.DevsToHide[data.networkid] then
+			if not _dont_draw[data.networkid] then
 				list[#list + 1] = {
 					isAdmin = aowl and aowl.CheckUserGroupFromSteamID(data.networkid, "developers"),
 					isBanned = banni and banni.dataexists(data.networkid) or false,
