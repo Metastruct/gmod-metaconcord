@@ -9,7 +9,7 @@ function ErrorPayload:handle(data)
 	PrintTable(data)
 end
 
-function Payload:__call(socket)
+function ErrorPayload:__call(socket)
 	self.socket = socket
 
 	hook.Add("OnHookFailed", self, function (_, name, identifier, error)
@@ -42,7 +42,7 @@ function Payload:__call(socket)
 	return self
 end
 
-function Payload:__gc()
+function ErrorPayload:__gc()
 	-- hook.Remove("LuaError", self)
 	hook.Remove("OnHookFailed", self)
 end
