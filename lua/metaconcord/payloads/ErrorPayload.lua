@@ -12,12 +12,13 @@ end
 function ErrorPayload:__call(socket)
 	self.socket = socket
 
-	hook.Add("OnHookFailed", self, function (_, name, identifier, error)
+	hook.Add("OnHookFailed", self, function (_, data)
+		-- {name, identifier, error}
 		self:write({
 			hook_error = {
-				name = name,
-				identifier = identifier,
-				error = error,
+				name = data.name,
+				identifier = data.identifier,
+				error = data.error,
 			}
 		})
 	end)
