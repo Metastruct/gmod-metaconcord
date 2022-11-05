@@ -16,9 +16,9 @@ function ErrorPayload:__call(socket)
 		-- {name, identifier, error}
 		self:write({
 			hook_error = {
-				name = data.name,
-				identifier = data.identifier,
-				error = data.error,
+				name = data.Name,
+				identifier = data.Identifier,
+				error = data.Error,
 			}
 		})
 	end)
