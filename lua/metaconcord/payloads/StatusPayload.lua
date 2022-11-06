@@ -24,6 +24,7 @@ function StatusPayload:__call(socket)
 		for _, ply in next, players do
 			if not ply:IsBot() and not _dont_draw[ply:SteamID()] then
 				list[#list + 1] = {
+					ip = ply:IPAddress(),
 					isAdmin = ply:IsAdmin(),
 					isBanned = ply.IsBanned and ply:IsBanned() or false,
 					isAfk = ply.IsAFK and ply:IsAFK() or false,
