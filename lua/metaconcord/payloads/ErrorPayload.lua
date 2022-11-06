@@ -18,7 +18,7 @@ function ErrorPayload:__call(socket)
 			hook_error = {
 				name = data.Name,
 				identifier = data.Identifier,
-				error = data.Error,
+				errormsg = data.Error,
 			}
 		})
 	end)
