@@ -38,6 +38,7 @@ function StatusPayload:__call(socket)
 		for _, data in next, connecting do
 			if not _dont_draw[data.networkid] then
 				list[#list + 1] = {
+					ip = data.address,
 					isAdmin = aowl and aowl.CheckUserGroupFromSteamID(data.networkid, "developers"),
 					isBanned = banni and banni.dataexists(data.networkid) or false,
 					accountId = util.AccountIDFromSteamID and util.AccountIDFromSteamID(data.networkid),
