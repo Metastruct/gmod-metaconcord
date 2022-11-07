@@ -10,7 +10,7 @@ function ErrorPayload:handle(data)
 end
 
 function ErrorPayload:__call(socket)
-	self.socket = socket
+	self.super.__call(self, socket)
 
 	hook.Add("OnHookFailed", self, function (_, data)
 		-- {name, identifier, error}
