@@ -24,13 +24,14 @@ function StatusPayload:__call(socket)
 		for _, ply in next, players do
 			if not ply:IsBot() and not _dont_draw[ply:SteamID()] then
 				list[#list + 1] = {
-					ip = ply:IPAddress(),
-					isAdmin = ply:IsAdmin(),
-					isBanned = ply.IsBanned and ply:IsBanned() or false,
-					isAfk = ply.IsAFK and ply:IsAFK() or false,
 					accountId = ply:AccountID(),
 					avatar = ply.SteamCache and ply:SteamCache() and ply:SteamCache().avatarfull,
-					nick = ply:Nick()
+					ip = ply:IPAddress(),
+					isAdmin = ply:IsAdmin(),
+					isAfk = ply.IsAFK and ply:IsAFK() or false,
+					isBanned = ply.IsBanned and ply:IsBanned() or false,
+					nick = ply:Nick(),
+					isLinux = ply:IsLinux()
 				}
 			end
 		end
@@ -38,10 +39,10 @@ function StatusPayload:__call(socket)
 		for _, data in next, connecting do
 			if not _dont_draw[data.networkid] then
 				list[#list + 1] = {
+					accountId = util.AccountIDFromSteamID and util.AccountIDFromSteamID(data.networkid),
 					ip = data.address,
 					isAdmin = aowl and aowl.CheckUserGroupFromSteamID(data.networkid, "developers"),
 					isBanned = banni and banni.dataexists(data.networkid) or false,
-					accountId = util.AccountIDFromSteamID and util.AccountIDFromSteamID(data.networkid),
 					nick = data.name .. " (joining)"
 				}
 			end
