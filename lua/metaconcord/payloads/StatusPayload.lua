@@ -31,7 +31,8 @@ function StatusPayload:__call(socket)
 					isAfk = ply.IsAFK and ply:IsAFK() or false,
 					isBanned = ply.IsBanned and ply:IsBanned() or false,
 					nick = ply:Nick(),
-					isLinux = ply:IsLinux()
+					isLinux = ply:IsLinux(),
+					isPirate = ply.IsPirate and ply:IsPirate() or false,
 				}
 			end
 		end
