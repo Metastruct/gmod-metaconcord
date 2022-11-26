@@ -104,6 +104,27 @@ function StatusPayload:__call(socket)
 	hookAndListen("player_spawn", self, remove)
 	hookAndListen("player_disconnect", self, remove)
 
+	hook.Add("AowlCountdown", self, function(_, type, time, text)
+		self:write{
+			countdown = {
+				time = time,
+				text = text
+			}
+		}
+	end)
+
+	local lastDefconLevel
+
+	timer.Create(self .. "defcon_check", 15 * 60, 0, function()
+		local level = defcon and defcon.Level or 5
+		if lastDefconLevel ~= level then
+			self:write{
+				defcon = level
+			}
+		end
+		lastDefconLevel = level
+	end)
+
 	return self
 end
 
@@ -111,6 +132,7 @@ function StatusPayload:__gc()
 	hook.Remove("player_connect", self)
 	hook.Remove("player_spawn", self)
 	hook.Remove("player_disconnect", self)
+	hook.Remove("AowlCountdown", self)
 end
 
 return setmetatable({}, StatusPayload)
