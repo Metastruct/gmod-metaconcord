@@ -62,6 +62,7 @@ function StatusPayload:__call(socket)
 		end
 
 		self:write({
+			countdown = aowl.IsCountDownOngoing(),
 			defcon = defcon and defcon.Level or 5,
 			hostname = GetHostName(),
 			players = list,
