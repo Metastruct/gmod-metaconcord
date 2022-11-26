@@ -115,7 +115,7 @@ function StatusPayload:__call(socket)
 
 	local lastDefconLevel = 5
 
-	timer.Create(self.name .. "_defcon_check", 15 * 60, 0, function()
+	timer.Create(self.name .. "_defcon_check", 5 * 60, 0, function()
 		local level = defcon and defcon.Level or 5
 		if lastDefconLevel ~= level then
 			self:write{
