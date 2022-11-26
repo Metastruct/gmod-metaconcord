@@ -103,9 +103,10 @@ function StatusPayload:__call(socket)
 	hookAndListen("player_spawn", self, remove)
 	hookAndListen("player_disconnect", self, remove)
 
-	hook.Add("AowlCountdown", self, function(_, type, time, text)
+	hook.Add("AowlCountdown", self, function(_, typ, time, text)
 		self:write{
 			countdown = {
+				typ = typ,
 				time = time,
 				text = text
 			}
