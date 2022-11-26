@@ -113,7 +113,7 @@ function StatusPayload:__call(socket)
 		}
 	end)
 
-	local lastDefconLevel
+	local lastDefconLevel = 5
 
 	timer.Create(self.name .. "_defcon_check", 15 * 60, 0, function()
 		local level = defcon and defcon.Level or 5
@@ -121,8 +121,8 @@ function StatusPayload:__call(socket)
 			self:write{
 				defcon = level
 			}
+			lastDefconLevel = level
 		end
-		lastDefconLevel = level
 	end)
 
 	return self
