@@ -9,6 +9,9 @@ local function hookAndListen(name, ...)
 	hook.Add(name, ...)
 end
 
+local STATUS_CHECK_INTERVAL = 60 * 5
+local DEFCON_CHECK_INTERVAL = 60 * 5
+
 local connecting = {}
 
 function StatusPayload:__call(socket)
@@ -18,6 +21,32 @@ function StatusPayload:__call(socket)
 	local _dont_draw = _G._dont_draw
 
 	function self:updateStatus()
+		local wmap = cookie.GetString("wmap", "")
+		local wsName, wsId = wmap:match("(.-)|(.+)")
+		local map = game.GetMap()
+		local workshopMap
+
+		if wsName and #wsName > 0 then
+			workshopMap = {
+				name = wsName,
+				id = wsId
+			}
+		end
+		self:write({
+			defcon = defcon and defcon.Level or 5,
+			hostname = GetHostName(),
+			map = map,
+			workshopMap = workshopMap,
+			serverUptime = SysTime(),
+			mapUptime = CurTime(),
+			gamemode = {
+				folderName = GAMEMODE.FolderName,
+				name = GAMEMODE.Name,
+			}
+		})
+	end
+
+	function self:updatePlayerStatus()
 		local players = player.GetAll()
 		local list = {}
 
@@ -49,36 +78,15 @@ function StatusPayload:__call(socket)
 			end
 		end
 
-		local wmap = cookie.GetString("wmap", "")
-		local wsName, wsId = wmap:match("(.-)|(.+)")
-		local map = game.GetMap()
-		local workshopMap
-
-		if wsName and #wsName > 0 then
-			workshopMap = {
-				name = wsName,
-				id = wsId
-			}
-		end
-
 		self:write({
-			defcon = defcon and defcon.Level or 5,
-			hostname = GetHostName(),
-			players = list,
-			map = map,
-			workshopMap = workshopMap,
-			serverUptime = SysTime(),
-			mapUptime = CurTime(),
-			gamemode = {
-				folderName = GAMEMODE.FolderName,
-				name = GAMEMODE.Name,
-			}
+			players = list
 		})
 	end
 
 	self.onConnected = function()
 			timer.Simple(5, function()
 				self:updateStatus()
+				self:updatePlayerStatus()
 		end)
 	end
 
@@ -86,7 +94,7 @@ function StatusPayload:__call(socket)
 		connecting[data.userid] = data
 
 		timer.Simple(0, function()
-			self:updateStatus()
+			self:updatePlayerStatus()
 		end)
 	end
 
@@ -95,7 +103,7 @@ function StatusPayload:__call(socket)
 		connecting[data.userid] = nil
 
 		timer.Simple(0, function()
-			self:updateStatus()
+			self:updatePlayerStatus()
 		end)
 	end
 
@@ -115,7 +123,7 @@ function StatusPayload:__call(socket)
 
 	local lastDefconLevel = 5
 
-	timer.Create(self.name .. "_defcon_check", 5 * 60, 0, function()
+	timer.Create(self.name .. "_defcon_check", DEFCON_CHECK_INTERVAL, 0, function()
 		local level = defcon and defcon.Level or 5
 		if lastDefconLevel ~= level then
 			self:write{
@@ -123,6 +131,10 @@ function StatusPayload:__call(socket)
 			}
 			lastDefconLevel = level
 		end
+	end)
+
+	timer.Create(self.name .. "_status_check", STATUS_CHECK_INTERVAL, 0, function()
+		self:updateStatus()
 	end)
 
 	return self
@@ -133,6 +145,8 @@ function StatusPayload:__gc()
 	hook.Remove("player_spawn", self)
 	hook.Remove("player_disconnect", self)
 	hook.Remove("AowlCountdown", self)
+	timer.Remove(self.name .. "_defcon_check")
+	timer.Remove(self.name .. "_status_check")
 end
 
 return setmetatable({}, StatusPayload)
