@@ -121,16 +121,10 @@ function StatusPayload:__call(socket)
 		}
 	end)
 
-	local lastDefconLevel = 5
-
-	timer.Create(self.name .. "_defcon_check", DEFCON_CHECK_INTERVAL, 0, function()
-		local level = defcon and defcon.Level or 5
-		if lastDefconLevel ~= level then
-			self:write{
-				defcon = level
-			}
-			lastDefconLevel = level
-		end
+	hook.Add("DefconLevelChange", self, function(level)
+		self:write{
+			defcon = level
+		}
 	end)
 
 	timer.Create(self.name .. "_status_check", STATUS_CHECK_INTERVAL, 0, function()
@@ -145,7 +139,7 @@ function StatusPayload:__gc()
 	hook.Remove("player_spawn", self)
 	hook.Remove("player_disconnect", self)
 	hook.Remove("AowlCountdown", self)
-	timer.Remove(self.name .. "_defcon_check")
+	hook.Remove("DefconLevelChange", self)
 	timer.Remove(self.name .. "_status_check")
 end
 
