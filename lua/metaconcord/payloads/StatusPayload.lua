@@ -123,7 +123,7 @@ function StatusPayload:__call(socket)
 
 	hook.Add("DefconLevelChange", self, function(level)
 		self:write{
-			defcon = level
+			defcon = tonumber(level)
 		}
 	end)
 
