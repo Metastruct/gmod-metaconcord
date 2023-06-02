@@ -35,7 +35,7 @@ function StatusPayload:__call(socket)
 		self:write({
 			defcon = defcon and defcon.Level or 5,
 			hostname = GetHostName(),
-			map = map,
+			mapName = map,
 			workshopMap = workshopMap,
 			serverUptime = SysTime(),
 			mapUptime = CurTime(),
