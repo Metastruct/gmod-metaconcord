@@ -27,6 +27,7 @@ function JoinLeavePayload:__call(socket)
 
 	hook.Add("PlayerInitialSpawn", self, function(_, ply)
 		if ply:IsBot() then return end
+		if ply.ConnectedThisMap and not ply:ConnectedThisMap() then return end -- only display initial connects
 		if _dont_draw[ply:SteamID()] then return end
 
 		self:write({
