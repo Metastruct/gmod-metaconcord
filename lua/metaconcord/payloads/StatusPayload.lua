@@ -10,7 +10,6 @@ local function hookAndListen(name, ...)
 end
 
 local STATUS_CHECK_INTERVAL = 60 * 5
-local DEFCON_CHECK_INTERVAL = 60 * 5
 
 local connecting = {}
 
@@ -121,7 +120,7 @@ function StatusPayload:__call(socket)
 		}
 	end)
 
-	hook.Add("DefconLevelChange", self, function(level)
+	hook.Add("DefconLevelChange", self, function(_, level)
 		self:write{
 			defcon = tonumber(level)
 		}
