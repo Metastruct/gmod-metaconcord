@@ -30,6 +30,14 @@ function StatusPayload:__call(socket)
 				name = wsName,
 				id = wsId
 			}
+		else
+			local wsid = file.Read("maps/" .. map .. ".bsp.wsid", true)
+			if wsid then
+				workshopMap = {
+					name = map,
+					id = wsid
+				}
+			end
 		end
 		self:write({
 			defcon = defcon and defcon.Level or 5,
