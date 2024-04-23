@@ -91,11 +91,11 @@ function StatusPayload:__call(socket)
 	end
 
 	self.onConnected = function()
+		timer.Simple(5, function()
+			self:updateStatus()
 			timer.Simple(5, function()
-				self:updateStatus()
-				timer.Simple(5, function()
-					self:updatePlayerStatus()
-				end)
+				self:updatePlayerStatus()
+			end)
 		end)
 	end
 
