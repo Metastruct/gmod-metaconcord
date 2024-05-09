@@ -9,7 +9,7 @@ local function hookAndListen(name, ...)
 	hook.Add(name, ...)
 end
 
-local STATUS_CHECK_INTERVAL = 60 * 5
+local STATUS_CHECK_INTERVAL = 60 * 2.5
 
 local connecting = {}
 
