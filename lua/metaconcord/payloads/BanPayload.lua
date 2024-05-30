@@ -26,8 +26,8 @@ end
 function BanPayload:__call(socket)
   self.super.__call(self, socket)
 
-  hook.Add("OnPlayerBanned", self, function(_, steamId, bannerSteamId, reason, unbanTime)
-    self:write({
+  hook.Add("OnPlayerBanned", self, function(_, steamId, bannerSteamId, reason, unbanTime, gamemode)
+    self:write{
       player = {
         nick = getPlayerNick(bannerSteamId),
         steamId = bannerSteamId,
@@ -38,7 +38,8 @@ function BanPayload:__call(socket)
       },
       reason = reason,
       unbanTime = tostring(unbanTime),
-    })
+      gamemode = tostring(gamemode)
+    }
   end)
 
   return self
