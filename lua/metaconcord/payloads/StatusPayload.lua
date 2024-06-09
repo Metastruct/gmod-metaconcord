@@ -103,8 +103,8 @@ function StatusPayload:__call(socket)
 	end
 
 	self.onConnected = function()
-		self:sendInfo()
-		timer.Simple(0, function()
+		timer.Simple(5, function() -- discord might not be connected yet
+			self:sendInfo()
 			self:updatePlayerStatus()
 		end)
 	end
