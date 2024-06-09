@@ -40,7 +40,7 @@ function StatusPayload:__call(socket)
 		end
 
 		local supportedGamemodes = gm_request and gm_request:GetSupportedGamemodes() or { [GAMEMODE.FolderName] = true }
-		local gamemodeList
+		local gamemodeList = {}
 		for name, _ in pairs(supportedGamemodes) do
 			gamemodeList[#gamemodeList + 1] = name
 		end
