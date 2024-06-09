@@ -10,7 +10,7 @@ local function hookAndListen(name, ...)
 end
 
 local connectingPlayers = {}
-local connecting = true
+local isReady = false
 
 function StatusPayload:__call(socket)
 	self.super.__call(self, socket)
@@ -59,10 +59,14 @@ function StatusPayload:__call(socket)
 			},
 			gamemodes = gamemodeList
 		}
+
+		isReady = true
 	end
 
 	--- player status info
 	function self:updatePlayerStatus()
+		if not isReady then return end
+
 		local list = {}
 
 		for _, ply in player.Iterator() do
@@ -99,15 +103,14 @@ function StatusPayload:__call(socket)
 	end
 
 	self.onConnected = function()
+		self:sendInfo()
 		timer.Simple(0, function()
-			self:sendInfo()
-			connecting = false
 			self:updatePlayerStatus()
 		end)
 	end
 
 	local function add(self, data)
-		if connecting then return end
+		if not isReady then return end
 		connectingPlayers[data.userid] = data
 
 		timer.Simple(0, function()
@@ -116,7 +119,7 @@ function StatusPayload:__call(socket)
 	end
 
 	local function remove(self, data)
-		if connecting or not connectingPlayers[data.userid] and not data.reason then return end
+		if not isReady or not connectingPlayers[data.userid] and not data.reason then return end
 		connectingPlayers[data.userid] = nil
 
 		timer.Simple(0, function()
@@ -129,7 +132,7 @@ function StatusPayload:__call(socket)
 	hookAndListen("player_disconnect", self, remove)
 
 	hook.Add("AowlCountdown", self, function(_, typ, time, text)
-		if connecting then return end
+		if not isReady then return end
 		self:write {
 			countdown = {
 				typ = typ,
@@ -140,7 +143,7 @@ function StatusPayload:__call(socket)
 	end)
 
 	hook.Add("DefconLevelChange", self, function(_, level)
-		if connecting then return end
+		if not isReady then return end
 		self:write {
 			defcon = tonumber(level)
 		}
