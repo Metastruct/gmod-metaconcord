@@ -9,8 +9,6 @@ local function hookAndListen(name, ...)
 	hook.Add(name, ...)
 end
 
-local STATUS_CHECK_INTERVAL = 60 * 2.5
-
 local connecting = {}
 
 function StatusPayload:__call(socket)
@@ -19,7 +17,8 @@ function StatusPayload:__call(socket)
 	_G._dont_draw = _G._dont_draw or {}
 	local _dont_draw = _G._dont_draw
 
-	function self:updateStatus()
+	-- stuff that we only send once
+	function self:sendInfo()
 		local wmap = cookie.GetString("wmap", "")
 		local wsName, wsId = wmap:match("(.-)|(.+)")
 		local map = game.GetMap()
@@ -39,7 +38,14 @@ function StatusPayload:__call(socket)
 				}
 			end
 		end
-		self:write({
+
+		local supportedGamemodes = gm_request and gm_request:GetSupportedGamemodes() or { [GAMEMODE.FolderName] = true }
+		local gamemodeList
+		for name, _ in pairs(supportedGamemodes) do
+			gamemodeList[#gamemodeList + 1] = name
+		end
+
+		self:write {
 			defcon = defcon and defcon.Level or 5,
 			hostname = GetHostName(),
 			mapName = map,
@@ -49,15 +55,16 @@ function StatusPayload:__call(socket)
 			gamemode = {
 				folderName = GAMEMODE.FolderName,
 				name = GAMEMODE.Name,
-			}
-		})
+			},
+			gamemodeList = gamemodeList
+		}
 	end
 
+	--- player status info
 	function self:updatePlayerStatus()
-		local players = player.GetAll()
 		local list = {}
 
-		for _, ply in next, players do
+		for _, ply in player.Iterator() do
 			if not ply:IsBot() and not _dont_draw[ply:SteamID()] then
 				list[#list + 1] = {
 					accountId = ply:AccountID(),
@@ -85,14 +92,14 @@ function StatusPayload:__call(socket)
 			end
 		end
 
-		self:write({
+		self:write {
 			players = list
-		})
+		}
 	end
 
 	self.onConnected = function()
 		timer.Simple(5, function()
-			self:updateStatus()
+			self:sendInfo()
 			timer.Simple(5, function()
 				self:updatePlayerStatus()
 			end)
@@ -121,7 +128,7 @@ function StatusPayload:__call(socket)
 	hookAndListen("player_disconnect", self, remove)
 
 	hook.Add("AowlCountdown", self, function(_, typ, time, text)
-		self:write{
+		self:write {
 			countdown = {
 				typ = typ,
 				time = time,
@@ -131,13 +138,9 @@ function StatusPayload:__call(socket)
 	end)
 
 	hook.Add("DefconLevelChange", self, function(_, level)
-		self:write{
+		self:write {
 			defcon = tonumber(level)
 		}
-	end)
-
-	timer.Create(self.name .. "_status_check", STATUS_CHECK_INTERVAL, 0, function()
-		self:updateStatus()
 	end)
 
 	return self
@@ -149,7 +152,6 @@ function StatusPayload:__gc()
 	hook.Remove("player_disconnect", self)
 	hook.Remove("AowlCountdown", self)
 	hook.Remove("DefconLevelChange", self)
-	timer.Remove(self.name .. "_status_check")
 end
 
 return setmetatable({}, StatusPayload)
