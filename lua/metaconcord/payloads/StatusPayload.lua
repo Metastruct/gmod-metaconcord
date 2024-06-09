@@ -112,7 +112,7 @@ function StatusPayload:__call(socket)
 	end
 
 	local function add(self, data)
-		if not isReady then return end
+		if not isReady or data.bot == 1 then return end
 		connectingPlayers[data.userid] = data
 
 		timer.Simple(0, function()
@@ -121,7 +121,7 @@ function StatusPayload:__call(socket)
 	end
 
 	local function remove(self, data)
-		if not isReady or not connectingPlayers[data.userid] and not data.reason then return end
+		if not isReady or (data.bot and data.bot == 1) or not connectingPlayers[data.userid] then return end
 		connectingPlayers[data.userid] = nil
 
 		timer.Simple(0, function()
@@ -130,7 +130,7 @@ function StatusPayload:__call(socket)
 	end
 
 	hookAndListen("player_connect", self, add)
-	hookAndListen("player_spawn", self, remove)
+	hookAndListen("player_activate", self, remove)
 	hookAndListen("player_disconnect", self, remove)
 
 	hook.Add("AowlCountdown", self, function(_, typ, time, text)
@@ -156,7 +156,7 @@ end
 
 function StatusPayload:__gc()
 	hook.Remove("player_connect", self)
-	hook.Remove("player_spawn", self)
+	hook.Remove("player_activate", self)
 	hook.Remove("player_disconnect", self)
 	hook.Remove("AowlCountdown", self)
 	hook.Remove("DefconLevelChange", self)
