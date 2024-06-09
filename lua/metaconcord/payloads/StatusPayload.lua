@@ -56,7 +56,7 @@ function StatusPayload:__call(socket)
 				folderName = GAMEMODE.FolderName,
 				name = GAMEMODE.Name,
 			},
-			gamemodeList = gamemodeList
+			gamemodes = gamemodeList
 		}
 	end
 
