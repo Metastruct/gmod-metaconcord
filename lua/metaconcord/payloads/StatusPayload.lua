@@ -9,7 +9,8 @@ local function hookAndListen(name, ...)
 	hook.Add(name, ...)
 end
 
-local connecting = {}
+local connectingPlayers = {}
+local connecting = true
 
 function StatusPayload:__call(socket)
 	self.super.__call(self, socket)
@@ -80,7 +81,7 @@ function StatusPayload:__call(socket)
 			end
 		end
 
-		for _, data in next, connecting do
+		for _, data in next, connectingPlayers do
 			if not _dont_draw[data.networkid] then
 				list[#list + 1] = {
 					accountId = util.AccountIDFromSteamID and util.AccountIDFromSteamID(data.networkid),
@@ -98,16 +99,16 @@ function StatusPayload:__call(socket)
 	end
 
 	self.onConnected = function()
-		timer.Simple(5, function()
+		timer.Simple(0, function()
 			self:sendInfo()
-			timer.Simple(5, function()
-				self:updatePlayerStatus()
-			end)
+			connecting = false
+			self:updatePlayerStatus()
 		end)
 	end
 
 	local function add(self, data)
-		connecting[data.userid] = data
+		if connecting then return end
+		connectingPlayers[data.userid] = data
 
 		timer.Simple(0, function()
 			self:updatePlayerStatus()
@@ -115,8 +116,8 @@ function StatusPayload:__call(socket)
 	end
 
 	local function remove(self, data)
-		if not connecting[data.userid] and not data.reason then return end
-		connecting[data.userid] = nil
+		if connecting or not connectingPlayers[data.userid] and not data.reason then return end
+		connectingPlayers[data.userid] = nil
 
 		timer.Simple(0, function()
 			self:updatePlayerStatus()
@@ -128,6 +129,7 @@ function StatusPayload:__call(socket)
 	hookAndListen("player_disconnect", self, remove)
 
 	hook.Add("AowlCountdown", self, function(_, typ, time, text)
+		if connecting then return end
 		self:write {
 			countdown = {
 				typ = typ,
@@ -138,6 +140,7 @@ function StatusPayload:__call(socket)
 	end)
 
 	hook.Add("DefconLevelChange", self, function(_, level)
+		if connecting then return end
 		self:write {
 			defcon = tonumber(level)
 		}
