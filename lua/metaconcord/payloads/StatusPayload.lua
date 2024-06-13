@@ -11,6 +11,7 @@ end
 
 local connectingPlayers = {}
 local isReady = false
+local lastPlayerUpdate = 0;
 
 function StatusPayload:__call(socket)
 	self.super.__call(self, socket)
@@ -65,7 +66,8 @@ function StatusPayload:__call(socket)
 
 	--- player status info
 	function self:updatePlayerStatus()
-		if not isReady then return end
+		local now = CurTime()
+		if not isReady or now - lastPlayerUpdate < 2 then return end
 
 		local list = {}
 
@@ -100,6 +102,8 @@ function StatusPayload:__call(socket)
 		self:write {
 			players = list
 		}
+
+		lastPlayerUpdate = now
 	end
 
 	self.onConnected = function()
