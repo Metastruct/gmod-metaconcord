@@ -121,7 +121,7 @@ function StatusPayload:__call(socket)
 	end
 
 	local function remove(self, data)
-		if not isReady or (data.bot and data.bot == 1) or not connectingPlayers[data.userid] then return end
+		if not isReady or (data.bot and data.bot == 1) then return end
 		connectingPlayers[data.userid] = nil
 
 		timer.Simple(0, function()
