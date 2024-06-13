@@ -62,34 +62,47 @@ local function print_chat_msg(nickname, msg)
 end
 
 function ChatPayload:handle(data)
+	local id = data.user.id
+	local username = data.user.username
+	local nick = data.user.nick
+	local color = data.user.color
+	local avatar_url = data.user.avatar_url
+	local content = data.content
+	local msgID = data.msgID
+	local replied_message = data.replied_message
+
+	local name = nick ~= "" and nick or username
+
 	local ret = hook.Run("DiscordSay", {
-			id = data.user.id,
-			name = data.user.nick,
-			color = data.user.color,
-			avatar_url = data.user.avatar_url,
+			id = id,
+			username = username,
+			name = name,
+			color = color,
+			avatar_url = avatar_url,
 		},
-		data.content,
-		data.msgID,
-		data.replied_message
+		content,
+		msgID,
+		replied_message
 	)
 
 	if ret == false then return end
 
-	ret = isstring(ret) and ret or data.content
+	ret = isstring(ret) and ret or content
 	if ret == "" then return end
 
-	print_chat_msg(data.user.nick, ret)
+	print_chat_msg(nick ~= "" and ("%s (%s)"):format(nick, username) or username, ret)
 
 	net.Start("metaconcordChatPayload")
-	net.WriteString(data.user.id)
-	net.WriteString(data.user.nick)
-	net.WriteInt(data.user.color, 25)
-	net.WriteString(data.user.avatar_url)
+	net.WriteString(id)
+	net.WriteString(username)
+	net.WriteString(nick)
+	net.WriteInt(color, 25)
+	net.WriteString(avatar_url)
 	net.WriteString(ret)
-	net.WriteString(data.msgID)
-	net.WriteString(data.replied_message and data.replied_message.content or "")
-	net.WriteString(data.replied_message and data.replied_message.msgID or "")
-	net.WriteString(data.replied_message and data.replied_message.ingameName or "")
+	net.WriteString(msgID)
+	net.WriteString(replied_message and replied_message.content or "")
+	net.WriteString(replied_message and replied_message.msgID or "")
+	net.WriteString(replied_message and replied_message.ingameName or "")
 	net.Broadcast()
 end
 
