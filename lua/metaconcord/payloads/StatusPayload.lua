@@ -122,7 +122,9 @@ function StatusPayload:__call(socket)
 
 	local function remove(self, data)
 		if not isReady or (data.bot and data.bot == 1) then return end
-		connectingPlayers[data.userid] = nil
+		if connectingPlayers[data.userid] then
+			connectingPlayers[data.userid] = nil
+		end
 
 		timer.Simple(0, function()
 			self:updatePlayerStatus()
