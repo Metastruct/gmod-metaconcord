@@ -1,6 +1,7 @@
 net.Receive("metaconcordChatPayload", function()
 	local id = net.ReadString()
-	local name = net.ReadString()
+	local username = net.ReadString()
+	local nick = net.ReadString()
 	local color = net.ReadInt(25)
 	local avatar_url = net.ReadString()
 	local content = net.ReadString()
@@ -11,7 +12,8 @@ net.Receive("metaconcordChatPayload", function()
 
 	hook.Run("DiscordSay", {
 			id = id,
-			name = name,
+			username = username,
+			name = nick ~= "" and nick or username,
 			color = color,
 			avatar_url = avatar_url,
 		},
