@@ -38,7 +38,7 @@ function BanPayload:__call(socket)
       },
       reason = reason,
       unbanTime = tostring(unbanTime),
-      gamemode = tostring(gamemode)
+      gamemode = gamemode
     }
   end)
 
