@@ -10,7 +10,7 @@ function ChatPayload:__call(socket)
 	self.super.__call(self, socket)
 
 	hook.Add("PlayerSay", self, function(_, ply, message, isTeamChat, isLocalChat)
-		if isLocalChat then return end
+		if isLocalChat or isTeamChat then return end
 		if ply.IsBanned and ply:IsBanned() then return end
 
 		-- if it doesnt exist then markup doesnt exist so why bother anyway
