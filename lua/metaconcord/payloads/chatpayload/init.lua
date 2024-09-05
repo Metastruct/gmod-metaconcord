@@ -92,6 +92,14 @@ function ChatPayload:handle(data)
 
 	print_chat_msg(nick ~= "" and ("%s (%s)"):format(nick, username) or username, ret)
 
+	local filter = CRecipientFiler()
+	for _, ply in ipairs(player.GetAll()) do
+		local ret = hook.Run("PlayerCanSeeDiscordChat", ret, username, nick, ply)
+		if ret == false then continue end
+
+		filter:AddPlayer(ply)
+	end
+
 	net.Start("metaconcordChatPayload")
 	net.WriteString(id)
 	net.WriteString(username)
@@ -103,7 +111,7 @@ function ChatPayload:handle(data)
 	net.WriteString(replied_message and replied_message.content or "")
 	net.WriteString(replied_message and replied_message.msgID or "")
 	net.WriteString(replied_message and replied_message.ingameName or "")
-	net.Broadcast()
+	net.Send(filter)
 end
 
 return setmetatable({}, ChatPayload)
