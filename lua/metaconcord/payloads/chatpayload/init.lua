@@ -92,7 +92,7 @@ function ChatPayload:handle(data)
 
 	print_chat_msg(nick ~= "" and ("%s (%s)"):format(nick, username) or username, msg)
 
-	local filter = CRecipientFiler()
+	local filter = RecipientFilter()
 	for _, ply in ipairs(player.GetAll()) do
 		local should_network = hook.Run("PlayerCanSeeDiscordChat", msg, username, nick, ply)
 		if should_network == false then continue end
