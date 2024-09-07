@@ -87,15 +87,15 @@ function ChatPayload:handle(data)
 
 	if ret == false then return end
 
-	ret = isstring(ret) and ret or content
-	if ret == "" then return end
+	local msg = isstring(ret) and ret or content
+	if msg == "" then return end
 
-	print_chat_msg(nick ~= "" and ("%s (%s)"):format(nick, username) or username, ret)
+	print_chat_msg(nick ~= "" and ("%s (%s)"):format(nick, username) or username, msg)
 
 	local filter = CRecipientFiler()
 	for _, ply in ipairs(player.GetAll()) do
-		local ret = hook.Run("PlayerCanSeeDiscordChat", ret, username, nick, ply)
-		if ret == false then continue end
+		local should_network = hook.Run("PlayerCanSeeDiscordChat", msg, username, nick, ply)
+		if should_network == false then continue end
 
 		filter:AddPlayer(ply)
 	end
@@ -106,7 +106,7 @@ function ChatPayload:handle(data)
 	net.WriteString(nick)
 	net.WriteInt(color, 25)
 	net.WriteString(avatar_url)
-	net.WriteString(ret)
+	net.WriteString(msg)
 	net.WriteString(msgID)
 	net.WriteString(replied_message and replied_message.content or "")
 	net.WriteString(replied_message and replied_message.msgID or "")
