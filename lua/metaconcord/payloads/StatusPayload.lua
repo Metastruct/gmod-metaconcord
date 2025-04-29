@@ -75,7 +75,7 @@ function StatusPayload:__call(socket)
 			if not ply:IsBot() and not _dont_draw[ply:SteamID()] then
 				list[#list + 1] = {
 					accountId = ply:AccountID(),
-					avatar = ply.SteamCache and ply:SteamCache() and ply:SteamCache().avatarfull,
+					avatar = (ply.SteamCache and ply:SteamCache() and ply:SteamCache().avatarfull) or nil,
 					ip = ply:IPAddress(),
 					isAdmin = ply:IsAdmin(),
 					isAfk = ply.IsAFK and ply:IsAFK() or false,
