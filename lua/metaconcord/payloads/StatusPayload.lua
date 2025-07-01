@@ -34,9 +34,11 @@ function StatusPayload:__call(socket)
 		else
 			local wsid = file.Read("maps/" .. map .. ".bsp.wsid", true)
 			if wsid then
+				local addons = {}
+				for id in wsid:gmatch("[^\r\n]+") do addons[#addons + 1] = id end
 				workshopMap = {
 					name = map,
-					id = wsid
+					id = addons[1]
 				}
 			end
 		end
