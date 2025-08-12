@@ -4,8 +4,8 @@ metaconcord = metaconcord or {
 	payloads = {}
 }
 
-local token = file.Read("metaconcord-token.txt", "DATA")
-local endpoint = file.Read("metaconcord-endpoint.txt", "DATA")
+local token = file.Read("metaconcord-token.txt", "DATA"):Trim()
+local endpoint = file.Read("metaconcord-endpoint.txt", "DATA"):Trim()
 local path = "metaconcord/payloads/%s"
 local headerCol = Color(53, 219, 166)
 local retry = false
