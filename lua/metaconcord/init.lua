@@ -27,7 +27,7 @@ end
 
 function metaconcord.connect()
 	if metaconcord.socket then return end -- metaconcord.print("Already connected!")
-	local socket = GWSockets.createWebSocket(("ws://%s"):format(endpoint))
+	local socket = GWSockets.createWebSocket(("wss://%s"):format(endpoint))
 	socket:setHeader("X-Auth-Token", token)
 
 	function socket:onMessage(data)
