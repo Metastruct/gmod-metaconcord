@@ -36,9 +36,13 @@ function NotificationPayload:__call(socket)
 				extra = extra .. ", "
 			end
 		end
+		local plyName = IsValid(ply) and ply:Nick() or "Console"
+		local plyID = IsValid(ply) and ply:SteamID64() or "SERVER"
+		local tgtName = IsValid(target) and target:Nick() or "Console"
+		local tgtID = IsValid(target) and target:SteamID64() or "SERVER"
 		self:write({
 			title = "aowl command",
-			message = ("[%s (%s)] %s -> [%s (%s)]%s"):format(ply:Nick(), ply:SteamID64(), cmd, target:Nick(), target:SteamID64(), extra ~= "" and (" (%s)"):format(extra) or "")
+			message = ("[%s (%s)] %s -> [%s (%s)]%s"):format(plyName, plyID, cmd, tgtName, tgtID, extra ~= "" and (" (%s)"):format(extra) or "")
 		})
 	end)
 
