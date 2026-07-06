@@ -11,7 +11,7 @@ end
 
 local connectingPlayers = {}
 local isReady = false
-local lastPlayerUpdate = 0;
+local lastPlayerUpdate = 0
 
 function StatusPayload:__call(socket)
 	self.super.__call(self, socket)
@@ -29,16 +29,18 @@ function StatusPayload:__call(socket)
 		if wsName and #wsName > 0 then
 			workshopMap = {
 				name = wsName,
-				id = wsId
+				id = wsId,
 			}
 		else
 			local wsid = file.Read("maps/" .. map .. ".bsp.wsid", true)
 			if wsid then
 				local addons = {}
-				for id in wsid:gmatch("[^\r\n]+") do addons[#addons + 1] = id end
+				for id in wsid:gmatch("[^\r\n]+") do
+					addons[#addons + 1] = id
+				end
 				workshopMap = {
 					name = map,
-					id = addons[1]
+					id = addons[1],
 				}
 			end
 		end
@@ -49,7 +51,7 @@ function StatusPayload:__call(socket)
 			gamemodeList[#gamemodeList + 1] = name
 		end
 
-		self:write {
+		self:write({
 			defcon = defcon and defcon.Level or 5,
 			hostname = GetHostName(),
 			mapName = map,
@@ -60,8 +62,8 @@ function StatusPayload:__call(socket)
 				folderName = GAMEMODE.FolderName,
 				name = GAMEMODE.Name,
 			},
-			gamemodes = gamemodeList
-		}
+			gamemodes = gamemodeList,
+		})
 
 		isReady = true
 	end
@@ -69,14 +71,16 @@ function StatusPayload:__call(socket)
 	--- player status info
 	function self:updatePlayerStatus()
 		local now = CurTime()
-		if not isReady or now - lastPlayerUpdate < 2 then return end
+		if not isReady or now - lastPlayerUpdate < 2 then
+			return
+		end
 
 		local list = {}
 
 		for _, ply in player.Iterator() do
 			if not ply:IsBot() and not _dont_draw[ply:SteamID()] then
 				list[#list + 1] = {
-					accountId = ply:AccountID(),
+					steamId64 = ply:SteamID64(),
 					avatar = (ply.SteamCache and ply:SteamCache() and ply:SteamCache().avatarfull) or nil,
 					ip = ply:IPAddress(),
 					isAdmin = ply:IsAdmin(),
@@ -92,18 +96,18 @@ function StatusPayload:__call(socket)
 		for _, data in next, connectingPlayers do
 			if not _dont_draw[data.networkid] then
 				list[#list + 1] = {
-					accountId = util.AccountIDFromSteamID and util.AccountIDFromSteamID(data.networkid),
+					steamId64 = util.SteamIDTo64(data.networkid),
 					ip = data.address,
 					isAdmin = aowl and aowl.CheckUserGroupFromSteamID(data.networkid, "developers"),
 					isBanned = banni and banni.dataexists(data.networkid) or false,
-					nick = data.name .. " (joining)"
+					nick = data.name .. " (joining)",
 				}
 			end
 		end
 
-		self:write {
-			players = list
-		}
+		self:write({
+			players = list,
+		})
 
 		lastPlayerUpdate = now
 	end
@@ -118,7 +122,9 @@ function StatusPayload:__call(socket)
 	end
 
 	local function add(self, data)
-		if not isReady or data.bot == 1 then return end
+		if not isReady or data.bot == 1 then
+			return
+		end
 		connectingPlayers[data.userid] = data
 
 		timer.Simple(0, function()
@@ -127,7 +133,9 @@ function StatusPayload:__call(socket)
 	end
 
 	local function remove(self, data)
-		if not isReady or (data.bot and data.bot == 1) then return end
+		if not isReady or (data.bot and data.bot == 1) then
+			return
+		end
 		if connectingPlayers[data.userid] then
 			connectingPlayers[data.userid] = nil
 		end
@@ -142,21 +150,25 @@ function StatusPayload:__call(socket)
 	hookAndListen("player_disconnect", self, remove)
 
 	hook.Add("AowlCountdown", self, function(_, typ, time, text)
-		if not isReady then return end
-		self:write {
+		if not isReady then
+			return
+		end
+		self:write({
 			countdown = {
 				typ = typ,
 				time = time,
-				text = text
-			}
-		}
+				text = text,
+			},
+		})
 	end)
 
 	hook.Add("DefconLevelChange", self, function(_, level)
-		if not isReady then return end
-		self:write {
-			defcon = tonumber(level)
-		}
+		if not isReady then
+			return
+		end
+		self:write({
+			defcon = tonumber(level),
+		})
 	end)
 
 	return self
