@@ -12,8 +12,8 @@ local activeReports = {}
 function ReportChatPayload:__call(socket)
 	self.super.__call(self, socket)
 
-	hook.Add("PlayerAuthed", self, function(ply, steamid)
-		local sid64 = util.SteamID64(steamid)
+	hook.Add("PlayerAuthed", self, function(ply, steamid, uniqueid)
+		local sid64 = util.SteamID64(tostring(steamid))
 		if activeReports[sid64] then
 			ply._active_report = activeReports[sid64]
 		end
