@@ -74,12 +74,13 @@ function ReportChatPayload:__call(socket)
 		payload.reporterSteamId64 = reporterSteamId64
 
 		local targetPly = player.GetBySteamID64(reporterSteamId64)
+		if not IsValid(targetPly) then
+			return
+		end
 
 		net.Start("metaconcord_report_chat_response")
 		net.WriteTable(payload)
-		if IsValid(targetPly) then
-			net.Send(targetPly)
-		end
+		net.Send(targetPly)
 	end
 
 	return self
