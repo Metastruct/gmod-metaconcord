@@ -89,6 +89,7 @@ function StatusPayload:__call(socket)
 					nick = ply:Nick(),
 					isLinux = ply:IsLinux(),
 					isPirate = ply.IsPirate and ply:IsPirate() or false,
+					entIndex = ply:EntIndex(),
 				}
 			end
 		end
