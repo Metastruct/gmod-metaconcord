@@ -16,7 +16,8 @@ local function mountedGames()
 	local games = {}
 	for _, game in ipairs(engine.GetGames()) do
 		if game.mounted then
-			games[#games + 1] = { folder = game.folder, title = game.title }
+			-- depot is the steam app id, which the website links and pictures with
+			games[#games + 1] = { folder = game.folder, title = game.title, depot = game.depot }
 		end
 	end
 
