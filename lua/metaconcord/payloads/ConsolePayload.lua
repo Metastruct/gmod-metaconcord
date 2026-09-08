@@ -125,4 +125,4 @@ function ConsolePayload:__gc()
 	timer.Remove(FLUSH_TIMER)
 end
 
-return ConsolePayload
+return setmetatable({}, ConsolePayload)
