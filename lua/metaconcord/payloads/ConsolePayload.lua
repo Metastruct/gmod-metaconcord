@@ -12,6 +12,8 @@ local QUEUE_SIZE = 1000
 local FLUSH_INTERVAL = 0.25
 local BATCH_SIZE = 200
 local FLUSH_TIMER = "metaconcord.ConsoleFlush"
+-- how long a chunk with no newline waits for the one that completes it
+local PENDING_MAX_AGE = 1
 
 -- SpewType_t: 0 message, 1 warning, 2 assert, 3 error, 4 log
 local SPEW_LEVELS = { [0] = "INFO", [1] = "WARN", [2] = "ERROR", [3] = "ERROR", [4] = "INFO" }
@@ -31,6 +33,8 @@ function ConsolePayload:__call(socket)
 	-- anything we print while writing would land back in the ring, so every
 	-- path that can print runs with this set
 	local muted = false
+	-- the tail of a chunk that had no newline yet, waiting to be completed
+	local pending, pendingLevel, pendingColor, pendingSince = "", nil, nil, 0
 
 	local function push(line)
 		replay[#replay + 1] = line
@@ -42,20 +46,52 @@ function ConsolePayload:__call(socket)
 		if #queue > QUEUE_SIZE then table.remove(queue, 1) end
 	end
 
-	hook.Add("EngineSpew", "metaconcord.ConsolePayload", function(logType, logMsg, logGroup, logLevel, r, g, b)
-		if muted or not logMsg then return end
-
-		local line = {
-			level = SPEW_LEVELS[logType] or "INFO",
-			text = logMsg,
-		}
-
+	local function colorOf(r, g, b)
 		-- white is the engine default, carrying it would just bloat every frame
 		if r and (r ~= 255 or g ~= 255 or b ~= 255) then
-			line.color = ("%02x%02x%02x"):format(r, g, b)
+			return ("%02x%02x%02x"):format(r, g, b)
+		end
+	end
+
+	local function emit(text, level, color)
+		-- the site joins lines with its own newline, so they are stored without
+		-- one; a stray \r would otherwise move the cursor in the terminal
+		push({ level = level, text = (text:gsub("\r$", "")), color = color })
+	end
+
+	local function flushPending()
+		if pending == "" or SysTime() - pendingSince < PENDING_MAX_AGE then return end
+
+		local text, level, color = pending, pendingLevel, pendingColor
+		pending = ""
+		emit(text, level, color)
+	end
+
+	hook.Add("EngineSpew", "metaconcord.ConsolePayload", function(logType, logMsg, logGroup, logLevel, r, g, b)
+		if muted or not logMsg or logMsg == "" then return end
+
+		local level = SPEW_LEVELS[logType] or "INFO"
+		local color = colorOf(r, g, b)
+
+		-- spew arrives as a stream of chunks, not lines: one chunk can hold
+		-- several newlines or none at all, so whole lines are cut out here and
+		-- the remainder waits for the chunk that finishes it
+		local buffer = pending .. logMsg
+		local start = 1
+		pending = ""
+
+		while true do
+			local nl = buffer:find("\n", start, true)
+			if not nl then break end
+
+			emit(buffer:sub(start, nl - 1), level, color)
+			start = nl + 1
 		end
 
-		push(line)
+		if start <= #buffer then
+			pending = buffer:sub(start)
+			pendingLevel, pendingColor, pendingSince = level, color, SysTime()
+		end
 	end)
 
 	-- takes up to BATCH_SIZE off the front of source and sends them. muted
@@ -84,6 +120,7 @@ function ConsolePayload:__call(socket)
 		-- one batch per tick, so a burst drains at a steady rate instead of
 		-- dumping the whole queue into a single frame
 		timer.Create(FLUSH_TIMER, FLUSH_INTERVAL, 0, function()
+			flushPending()
 			if subscribed then sendBatch(queue, false) end
 		end)
 	end
