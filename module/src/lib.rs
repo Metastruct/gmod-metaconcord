@@ -107,18 +107,37 @@ unsafe fn gserv_fn(lua: State) -> i32 {
     std::thread::spawn(move || {
         let (tx, rx) = std::sync::mpsc::channel();
         let worker = std::thread::spawn(move || gserv::run(tokens, tx));
+
+        let mut answered = false;
         for output in rx {
+            let event = match output {
+                gserv::Output::Stdout(text) => dispatch::Event::GservStdout(text),
+                gserv::Output::Stderr(text) => dispatch::Event::GservStderr(text),
+                gserv::Output::Exit(code) => {
+                    answered = true;
+                    dispatch::Event::GservExit(code)
+                }
+                gserv::Output::Failed(message) => {
+                    answered = true;
+                    dispatch::Event::Failed(message)
+                }
+            };
+            dispatch::push(callback, event);
+        }
+        let panicked = worker.join().is_err();
+
+        // the callback holds lua's "a run is in progress" flag, so it has to be
+        // told the run is over even when the worker died without saying so
+        if !answered {
             dispatch::push(
                 callback,
-                match output {
-                    gserv::Output::Stdout(text) => dispatch::Event::GservStdout(text),
-                    gserv::Output::Stderr(text) => dispatch::Event::GservStderr(text),
-                    gserv::Output::Exit(code) => dispatch::Event::GservExit(code),
-                    gserv::Output::Failed(message) => dispatch::Event::Failed(message),
-                },
+                dispatch::Event::Failed(if panicked {
+                    "gserv failed: the worker panicked".to_owned()
+                } else {
+                    "gserv ended without reporting a result".to_owned()
+                }),
             );
         }
-        let _ = worker.join();
     });
 
     0
