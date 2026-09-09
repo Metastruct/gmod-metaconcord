@@ -104,7 +104,18 @@ unsafe fn gserv_fn(lua: State) -> i32 {
         }
     };
 
+    // held for the life of the run, so every caller queues behind whoever got
+    // there first instead of pulling the same repos at the same time
+    let Some(guard) = gserv::RunGuard::acquire() else {
+        dispatch::push(
+            callback,
+            dispatch::Event::Failed("a gserv run is already in progress".to_owned()),
+        );
+        return 0;
+    };
+
     std::thread::spawn(move || {
+        let _guard = guard;
         let (tx, rx) = std::sync::mpsc::channel();
         let worker = std::thread::spawn(move || gserv::run(tokens, tx));
 

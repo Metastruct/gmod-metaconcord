@@ -11,26 +11,18 @@ GservPayload.name = "GservPayload"
 function GservPayload:__call(socket)
 	self.super.__call(self, socket)
 
-	-- one run at a time, matching the single gserv button the site allows
-	local running = false
-
 	function self:handle(data)
 		local identifier = data.identifier
 
-		if running then
-			self:write({ identifier = identifier, done = true, error = "a gserv run is already in progress" })
-			return true
-		end
-
+		-- one run at a time is enforced in the module, since an in-game aowl
+		-- command reaches gserv without passing through here
 		if not metaconcord.native then
 			self:write({ identifier = identifier, done = true, error = "native module missing" })
 			return true
 		end
 
-		running = true
 		metaconcord.native.Gserv(data.command or "", function(err, event)
 			if err then
-				running = false
 				if self:IsValid() then
 					self:write({ identifier = identifier, done = true, error = tostring(err) })
 				end
@@ -38,7 +30,6 @@ function GservPayload:__call(socket)
 			end
 
 			if event.kind == "exit" then
-				running = false
 				if self:IsValid() then
 					self:write({ identifier = identifier, done = true, code = event.code })
 				end
