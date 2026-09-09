@@ -4,6 +4,13 @@ metaconcord = metaconcord or {
 	payloads = {}
 }
 
+-- the native half supplies host information the lua sandbox cannot reach
+-- (stats, the repo list, gserv). it is optional on purpose: a server without
+-- the module still relays chat, status, bans and rcon, it just loses those.
+if pcall(require, "metaconcord") and metaconcord_native then
+	metaconcord.native = metaconcord_native
+end
+
 local token = file.Read("metaconcord-token.txt", "DATA"):Trim()
 local endpoint = file.Read("metaconcord-endpoint.txt", "DATA"):Trim()
 local path = "metaconcord/payloads/%s"
