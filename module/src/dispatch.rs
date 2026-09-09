@@ -12,7 +12,8 @@ pub enum Event {
     Repos(Result<Vec<crate::repos::Repo>, String>),
     GservStdout(String),
     GservStderr(String),
-    GservExit(i32),
+    /// None when srcds's auto-reap took the status before we could read it.
+    GservExit(Option<i32>),
     Failed(String),
 }
 
@@ -86,8 +87,12 @@ unsafe fn push_result(lua: State, event: &Event) {
             lua.create_table(0, 2);
             lua.push_string("exit");
             lua.set_field(-2, lua_string!("kind"));
-            lua.push_number(*code as f64);
-            lua.set_field(-2, lua_string!("code"));
+            // left unset when the status was lost, so the caller judges the
+            // run by its output rather than by a code we had to invent
+            if let Some(code) = code {
+                lua.push_number(*code as f64);
+                lua.set_field(-2, lua_string!("code"));
+            }
         }
     }
 }

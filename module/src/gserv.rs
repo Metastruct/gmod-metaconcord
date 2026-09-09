@@ -9,19 +9,6 @@ use std::io::{BufRead, BufReader};
 use std::process::{Command, Stdio};
 use std::sync::mpsc::Sender;
 
-/// gserv shells out to git, npm and friends, which need the environment a
-/// login shell sets up. srcds is started with a narrower one, so the verb runs
-/// through `bash -lc` the way it did over ssh. The script is a fixed literal
-/// and the verb arrives in argv, so nothing in it can be interpreted.
-const LOGIN_SHELL: &str = "bash";
-const RUN_GSERV: &str = r#"exec gserv "$@""#;
-
-/// argv for running `gserv <tokens>` under a login shell.
-pub fn shell_argv(script: &str, tokens: &[String]) -> Vec<String> {
-    let mut argv = vec!["-lc".to_owned(), script.to_owned(), "gserv".to_owned()];
-    argv.extend(tokens.iter().cloned());
-    argv
-}
 
 /// Everything the bridge is allowed to ask for. `Gserv.ts` offers the same set,
 /// minus anything that would restart the server out from under us.
@@ -37,8 +24,23 @@ const ALLOWED: &[&str] = &[
 pub enum Output {
     Stdout(String),
     Stderr(String),
-    Exit(i32),
+    /// None when the status was auto-reaped before we could read it; the run
+    /// still finished, we just cannot say with what code.
+    Exit(Option<i32>),
     Failed(String),
+}
+
+/// What to report once the pipes have closed.
+///
+/// srcds ignores SIGCHLD, so the kernel reaps our child for us and wait comes
+/// back ECHILD. That is not a failure: the process ran and we read all of its
+/// output, only the status is gone. Every other wait error is a real one.
+fn wait_outcome(result: std::io::Result<std::process::ExitStatus>) -> Output {
+    match result {
+        Ok(status) => Output::Exit(Some(status.code().unwrap_or(-1))),
+        Err(err) if err.raw_os_error() == Some(libc::ECHILD) => Output::Exit(None),
+        Err(err) => Output::Failed(format!("could not wait on gserv: {err}")),
+    }
 }
 
 /// Splits a verb like "qu rehash" and rejects it unless every token is allowed.
@@ -56,9 +58,13 @@ pub fn validate(verb: &str) -> Result<Vec<String>, String> {
 /// Spawns gserv and streams its output down the channel, ending with exactly
 /// one Exit or Failed. Runs on a worker thread and never touches Lua.
 pub fn run(tokens: Vec<String>, tx: Sender<Output>) {
-    let mut command = Command::new(LOGIN_SHELL);
+    // no shell: the verb is argv, so nothing in it is ever interpreted. gserv
+    // lives on srcds's own PATH, and a login shell would not add anything --
+    // this box's .bashrc returns before nvm loads for non-interactive shells,
+    // so npm is out of reach either way, exactly as it was over ssh.
+    let mut command = Command::new("gserv");
     command
-        .args(shell_argv(RUN_GSERV, &tokens))
+        .args(&tokens)
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
@@ -119,16 +125,8 @@ pub fn run(tokens: Vec<String>, tx: Sender<Output>) {
 
     let _ = pump_stderr.join();
 
-    // waitpid on our own child: a broad reaper elsewhere in the process would
-    // steal the status, in which case the pipes closing is what ends the run
-    match child.wait() {
-        Ok(status) => {
-            let _ = tx.send(Output::Exit(status.code().unwrap_or(-1)));
-        }
-        Err(err) => {
-            let _ = tx.send(Output::Failed(format!("could not wait on gserv: {err}")));
-        }
-    }
+    // both pipes are drained by now, so the run is over either way
+    let _ = tx.send(wait_outcome(child.wait()));
 }
 
 #[cfg(test)]
@@ -157,19 +155,12 @@ mod tests {
         }
     }
 
-    /// gserv runs under a login shell now, so a host without it reports the
-    /// shell's 127 rather than a spawn failure. Either way the run terminates
-    /// exactly once and is not reported as a success.
+    /// A host with no gserv must terminate the run exactly once and never look
+    /// like a clean one.
     #[test]
     fn a_missing_gserv_terminates_the_run_without_hanging() {
         // skip where gserv actually exists, this is about the failure path
-        if Command::new(LOGIN_SHELL)
-            .args(shell_argv(r#"command -v gserv"#, &[]))
-            .stdout(Stdio::null())
-            .status()
-            .map(|s| s.success())
-            .unwrap_or(false)
-        {
+        if Command::new("gserv").arg("status").stdout(Stdio::null()).stderr(Stdio::null()).status().is_ok() {
             return;
         }
 
@@ -183,7 +174,7 @@ mod tests {
             .collect();
         assert_eq!(terminal.len(), 1, "expected exactly one terminal event");
         assert!(
-            !matches!(terminal[0], Output::Exit(0)),
+            !matches!(terminal[0], Output::Exit(Some(0))),
             "a missing gserv must not look like a clean run"
         );
     }
@@ -192,24 +183,66 @@ mod tests {
 #[cfg(test)]
 mod exec_tests {
     use super::*;
+    use std::io::{Error, ErrorKind};
 
-    /// The verb reaches gserv as argv, so nothing in it is ever interpreted by
-    /// the shell even though one is in the way.
+    /// srcds auto-reaps our child, so wait fails with ECHILD after a run that
+    /// went perfectly. That has to read as "finished, status unknown", not as
+    /// a failure, or every gserv verb reports as broken.
     #[test]
-    fn the_verb_is_passed_as_arguments_not_interpolated() {
-        let argv = shell_argv(r#"exec printf '[%s]' "$@""#, &["qu".into(), "rehash".into()]);
-        let out = Command::new("bash").args(&argv).output().unwrap();
-        assert_eq!(String::from_utf8_lossy(&out.stdout), "[qu][rehash]");
+    fn an_auto_reaped_child_counts_as_a_finished_run() {
+        let echild = Error::from_raw_os_error(libc::ECHILD);
+        assert!(matches!(wait_outcome(Err(echild)), Output::Exit(None)));
     }
 
-    /// A token that would be dangerous in a command string stays one argument.
-    /// The whitelist rejects these first; this is the layer under it.
+    /// Any other wait error is still a real failure.
     #[test]
-    fn metacharacters_in_a_token_are_not_evaluated() {
-        let argv = shell_argv(r#"exec printf '[%s]' "$@""#, &["a; touch /tmp/pwned".into()]);
-        let out = Command::new("bash").args(&argv).output().unwrap();
-        assert_eq!(String::from_utf8_lossy(&out.stdout), "[a; touch /tmp/pwned]");
-        assert!(!std::path::Path::new("/tmp/pwned").exists());
+    fn other_wait_errors_are_still_failures() {
+        let denied = Error::new(ErrorKind::PermissionDenied, "nope");
+        assert!(matches!(wait_outcome(Err(denied)), Output::Failed(_)));
+    }
+
+    #[test]
+    fn a_normal_exit_keeps_its_code() {
+        let status = Command::new("bash").arg("-c").arg("exit 3").status().unwrap();
+        assert!(matches!(wait_outcome(Ok(status)), Output::Exit(Some(3))));
+    }
+
+    /// The whole path against a real gserv, with SIGCHLD ignored the way srcds
+    /// leaves it. Only meaningful on a game host:
+    /// `cargo test --release -- --ignored real_gserv`
+    #[test]
+    #[ignore = "needs a real gserv"]
+    fn real_gserv_status_survives_an_ignored_sigchld() {
+        // exactly what /proc/<srcds>/status reports on a live server
+        unsafe { libc::signal(libc::SIGCHLD, libc::SIG_IGN) };
+
+        let (tx, rx) = std::sync::mpsc::channel();
+        run(vec!["status".to_owned()], tx);
+        let events: Vec<Output> = rx.into_iter().collect();
+
+        let lines: Vec<&String> = events
+            .iter()
+            .filter_map(|e| match e {
+                Output::Stdout(t) | Output::Stderr(t) => Some(t),
+                _ => None,
+            })
+            .collect();
+        let terminal: Vec<&Output> = events
+            .iter()
+            .filter(|e| matches!(e, Output::Exit(_) | Output::Failed(_)))
+            .collect();
+
+        for line in &lines {
+            println!("  gserv: {line}");
+        }
+        println!("  terminal: {:?}", terminal.len());
+
+        assert!(!lines.is_empty(), "gserv produced no output at all");
+        assert_eq!(terminal.len(), 1, "expected exactly one terminal event");
+        assert!(
+            !matches!(terminal[0], Output::Failed(_)),
+            "an auto-reaped run must not be reported as a failure"
+        );
     }
 
     /// srcds ignores SIGCHLD, and unlike a handler SIG_IGN survives execve, so

@@ -162,6 +162,21 @@ pub fn default_root() -> Option<PathBuf> {
 }
 
 #[cfg(test)]
+mod parity {
+    /// Prints the rows as the TSV the old ssh shell script produced, so the two
+    /// can be diffed on a real game host:
+    /// `cargo test --release -- --ignored --nocapture repos_tsv`
+    #[test]
+    #[ignore = "needs a real ~/gserv/repos"]
+    fn repos_tsv() {
+        let root = super::default_root().expect("HOME");
+        for r in super::enumerate(&root).expect("walk") {
+            println!("{}\t{}\t{}\t{}\t{}", r.repo, r.sub, r.remote, r.wsid, r.branch);
+        }
+    }
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
     use std::fs;
