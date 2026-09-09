@@ -1,0 +1,24 @@
+[package]
+name = "metaconcord"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "metaconcord"
+crate-type = ["cdylib", "rlib"]
+
+# the module touches no engine internals, only the lua state, so none of
+# gmod-rs's sigscan/detour machinery is pulled in
+[dependencies]
+gmod = { version = "17", default-features = false }
+libc = "0.2"
+
+[profile.release]
+opt-level = 2
+lto = true
+codegen-units = 1
+# a panic must never unwind across the ffi boundary, but aborting would take
+# srcds with it, so panics are caught at the boundary instead
+panic = "unwind"
+strip = "debuginfo"

@@ -1,9 +1,7 @@
--- engine.GetAddons() is empty on our servers, so `pull` only tells metaconcord the
--- server just booted and its addon list should be pulled over SSH (~/gserv/repos).
--- Pulled once per server lifetime: payloads are re-created on every socket
--- reconnect, so the flag lives on the global metaconcord table. The mounted games
--- are sent on every connect instead, so a metaconcord restart gets them back
--- without waiting for the next server boot.
+-- engine.GetAddons() is empty on our servers, so the addon list is read off
+-- disk by the native module (~/gserv/repos) and sent whole on every connect,
+-- the same way the minecraft mod reports its mods. metaconcord resolves what
+-- the rows point at; this only reports what is on the box.
 local Payload = include("./Payload.lua")
 local AddonsPayload = table.Copy(Payload)
 AddonsPayload.__index = AddonsPayload
@@ -30,9 +28,29 @@ function AddonsPayload:__call(socket)
 
 	self.onConnected = function()
 		timer.Simple(10, function() -- after StatusPayload's initial info
-			local pull = not metaconcord.addonsPulled
-			metaconcord.addonsPulled = true
-			self:write({ pull = pull, games = mountedGames() })
+			if not self:IsValid() then return end
+
+			-- without the module there is no list to send; metaconcord keeps
+			-- whatever it stored last rather than being told the server has none
+			if not metaconcord.native then
+				self:write({ games = mountedGames() })
+				return
+			end
+
+			metaconcord.native.Repos(function(err, rows)
+				if not self:IsValid() then return end
+
+				if err then
+					metaconcord.print("error", self.name, tostring(err))
+					self:write({ games = mountedGames() })
+					return
+				end
+
+				self:write({
+					games = mountedGames(),
+					repos = #rows > 0 and rows or nil,
+				})
+			end)
 		end)
 	end
 

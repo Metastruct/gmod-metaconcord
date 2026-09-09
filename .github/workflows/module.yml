@@ -1,0 +1,37 @@
+name: module
+
+on:
+  push:
+    paths: ["module/**", ".github/workflows/module.yml"]
+  pull_request:
+    paths: ["module/**", ".github/workflows/module.yml"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test
+        working-directory: module
+        run: |
+          rustup toolchain install nightly --profile minimal
+          cargo test --release
+
+      # the same container build.sh uses locally, so the glibc floor cannot
+      # drift between a developer's build and CI's
+      - name: Build both architectures
+        run: ./module/build.sh
+
+      - name: Check the glibc floor
+        run: |
+          for f in lua/bin/gmsv_metaconcord_linux.dll lua/bin/gmsv_metaconcord_linux64.dll; do
+            floor=$(objdump -T "$f" | grep -o 'GLIBC_[0-9.]*' | sort -V -u | tail -1)
+            echo "$f requires $floor"
+            [ "$floor" = "GLIBC_2.28" ] || { echo "::error::$f wants $floor, expected GLIBC_2.28"; exit 1; }
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: modules
+          path: lua/bin/gmsv_metaconcord_*.dll
