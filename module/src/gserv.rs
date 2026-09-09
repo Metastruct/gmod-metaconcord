@@ -6,6 +6,7 @@
 //! it stands, so a verb can never grow an argument it was not given.
 
 use std::io::{BufRead, BufReader};
+use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::sync::mpsc::Sender;
 
@@ -20,6 +21,57 @@ const ALLOWED: &[&str] = &[
     "update_repos",
     "status",
 ];
+
+fn is_executable(path: &std::path::Path) -> bool {
+    use std::os::unix::fs::PermissionsExt;
+    std::fs::metadata(path)
+        .map(|m| m.is_file() && m.permissions().mode() & 0o111 != 0)
+        .unwrap_or(false)
+}
+
+/// An absolute path to gserv.
+///
+/// srcds's PATH is not something we control and is not visible from outside the
+/// process, so leaving the lookup to execvp makes a failure both likely and
+/// invisible: std cannot report a failed exec here, it panics trying to reap
+/// the child that srcds already auto-reaped. gserv lives beside the repos it
+/// manages, so look there first and treat PATH as the fallback.
+pub fn resolve() -> Result<PathBuf, String> {
+    resolve_in(std::env::var_os("HOME"), std::env::var_os("PATH"))
+}
+
+/// The lookup itself, so it can be tested without touching the environment.
+fn resolve_in(
+    home: Option<std::ffi::OsString>,
+    path: Option<std::ffi::OsString>,
+) -> Result<PathBuf, String> {
+    let mut tried: Vec<String> = Vec::new();
+
+    if let Some(home) = home {
+        let candidate = PathBuf::from(home).join("gserv").join("gserv");
+        if is_executable(&candidate) {
+            return Ok(candidate);
+        }
+        tried.push(candidate.display().to_string());
+    } else {
+        tried.push("$HOME unset".to_owned());
+    }
+
+    match path {
+        Some(path) => {
+            for dir in std::env::split_paths(&path) {
+                let candidate = dir.join("gserv");
+                if is_executable(&candidate) {
+                    return Ok(candidate);
+                }
+            }
+            tried.push(format!("PATH={}", path.to_string_lossy()));
+        }
+        None => tried.push("$PATH unset".to_owned()),
+    }
+
+    Err(format!("gserv not found (tried {})", tried.join(", ")))
+}
 
 pub enum Output {
     Stdout(String),
@@ -58,11 +110,16 @@ pub fn validate(verb: &str) -> Result<Vec<String>, String> {
 /// Spawns gserv and streams its output down the channel, ending with exactly
 /// one Exit or Failed. Runs on a worker thread and never touches Lua.
 pub fn run(tokens: Vec<String>, tx: Sender<Output>) {
-    // no shell: the verb is argv, so nothing in it is ever interpreted. gserv
-    // lives on srcds's own PATH, and a login shell would not add anything --
-    // this box's .bashrc returns before nvm loads for non-interactive shells,
-    // so npm is out of reach either way, exactly as it was over ssh.
-    let mut command = Command::new("gserv");
+    // no shell: the verb is argv, so nothing in it is ever interpreted
+    let program = match resolve() {
+        Ok(program) => program,
+        Err(message) => {
+            let _ = tx.send(Output::Failed(message));
+            return;
+        }
+    };
+
+    let mut command = Command::new(program);
     command
         .args(&tokens)
         .stdin(Stdio::null())
@@ -91,10 +148,21 @@ pub fn run(tokens: Vec<String>, tx: Sender<Output>) {
         });
     }
 
-    let mut child = match command.spawn() {
-        Ok(child) => child,
-        Err(err) => {
+    // srcds auto-reaps, so std cannot reap a child whose exec failed and
+    // asserts instead of returning the error. Catching that keeps a bad spawn
+    // from taking the worker thread down and leaving the run with no answer.
+    let spawned = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| command.spawn()));
+    let mut child = match spawned {
+        Ok(Ok(child)) => child,
+        Ok(Err(err)) => {
             let _ = tx.send(Output::Failed(format!("could not run gserv: {err}")));
+            return;
+        }
+        Err(_) => {
+            let _ = tx.send(Output::Failed(
+                "could not run gserv: spawning it failed and srcds's auto-reap hid the reason"
+                    .to_owned(),
+            ));
             return;
         }
     };
@@ -153,6 +221,73 @@ mod tests {
         for verb in ["rehash; rm -rf /", "rehash && curl evil", "rehash|sh", "$(id)", "../../bin/sh"] {
             assert!(validate(verb).is_err(), "should have rejected {verb:?}");
         }
+    }
+
+    /// g3's srcds runs with PATH=/usr/bin:/bin, which does not contain gserv,
+    /// so leaving the lookup to execvp fails there while working on g2. HOME is
+    /// the same on both, so it is what the lookup leans on.
+    #[test]
+    fn gserv_is_found_through_home_even_when_path_lacks_it() {
+        use std::ffi::OsString;
+        let root = std::env::temp_dir().join(format!("mc-gserv-{}", std::process::id()));
+        let bin = root.join("gserv");
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(&bin.parent().unwrap().join("gserv")).unwrap();
+        let exe = root.join("gserv").join("gserv");
+        std::fs::write(&exe, "#!/bin/sh\ntrue\n").unwrap();
+        {
+            use std::os::unix::fs::PermissionsExt;
+            std::fs::set_permissions(&exe, std::fs::Permissions::from_mode(0o755)).unwrap();
+        }
+
+        // g3: PATH cannot help, HOME must
+        let found = resolve_in(Some(OsString::from(&root)), Some(OsString::from("/usr/bin:/bin")));
+        assert_eq!(found.unwrap(), exe);
+
+        // and with no PATH at all
+        let found = resolve_in(Some(OsString::from(&root)), None);
+        assert_eq!(found.unwrap(), exe);
+
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    /// Falls back to PATH when it is not beside HOME, and says what it tried
+    /// rather than letting execvp fail somewhere std cannot report it.
+    #[test]
+    fn resolution_falls_back_to_path_then_reports_what_it_tried() {
+        use std::ffi::OsString;
+        let dir = std::env::temp_dir().join(format!("mc-path-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let exe = dir.join("gserv");
+        std::fs::write(&exe, "#!/bin/sh\ntrue\n").unwrap();
+        {
+            use std::os::unix::fs::PermissionsExt;
+            std::fs::set_permissions(&exe, std::fs::Permissions::from_mode(0o755)).unwrap();
+        }
+
+        let found = resolve_in(Some(OsString::from("/nonexistent")), Some(OsString::from(&dir)));
+        assert_eq!(found.unwrap(), exe);
+
+        let err = resolve_in(Some(OsString::from("/nonexistent")), Some(OsString::from("/usr/bin")))
+            .unwrap_err();
+        assert!(err.contains("/nonexistent/gserv/gserv"), "should name the home path: {err}");
+        assert!(err.contains("PATH="), "should name the path it searched: {err}");
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// A non-executable file must not be mistaken for gserv.
+    #[test]
+    fn a_non_executable_candidate_is_skipped() {
+        use std::ffi::OsString;
+        let root = std::env::temp_dir().join(format!("mc-noexec-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(root.join("gserv")).unwrap();
+        std::fs::write(root.join("gserv").join("gserv"), "not executable").unwrap();
+
+        assert!(resolve_in(Some(OsString::from(&root)), None).is_err());
+        let _ = std::fs::remove_dir_all(&root);
     }
 
     /// A host with no gserv must terminate the run exactly once and never look
