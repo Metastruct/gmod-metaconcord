@@ -17,6 +17,7 @@ local PENDING_MAX_AGE = 1
 
 -- SpewType_t: 0 message, 1 warning, 2 assert, 3 error, 4 log
 local SPEW_LEVELS = { [0] = "INFO", [1] = "WARN", [2] = "ERROR", [3] = "ERROR", [4] = "INFO" }
+local SEVERITY = { INFO = 0, WARN = 1, ERROR = 2 }
 
 function ConsolePayload:__call(socket)
 	self.super.__call(self, socket)
@@ -33,8 +34,9 @@ function ConsolePayload:__call(socket)
 	-- anything we print while writing would land back in the ring, so every
 	-- path that can print runs with this set
 	local muted = false
-	-- the tail of a chunk that had no newline yet, waiting to be completed
-	local pending, pendingLevel, pendingColor, pendingSince = "", nil, nil, 0
+	-- segments of the line being built, each with the colour of the chunk it
+	-- came from, plus the worst level any of them carried
+	local pending, pendingLevel, pendingSince = {}, nil, 0
 
 	local function push(line)
 		replay[#replay + 1] = line
@@ -53,18 +55,49 @@ function ConsolePayload:__call(socket)
 		end
 	end
 
-	local function emit(text, level, color)
+	-- a line assembled from several chunks takes the worst level of any of them,
+	-- so a warning is not hidden by the plain text that finished the line
+	local function worst(a, b)
+		if not a then return b end
+		return (SEVERITY[b] or 0) > (SEVERITY[a] or 0) and b or a
+	end
+
+	local function emit(parts, level)
 		-- the site joins lines with its own newline, so they are stored without
 		-- one; a stray \r would otherwise move the cursor in the terminal
-		push({ level = level, text = (text:gsub("\r$", "")), color = color })
+		if #parts > 0 then
+			local last = parts[#parts]
+			last.text = (last.text:gsub("\r$", ""))
+		end
+
+		local text = {}
+		local uniform = true
+		for i = 1, #parts do
+			text[i] = parts[i].text
+			if parts[i].color ~= parts[1].color then uniform = false end
+		end
+
+		local line = { level = level or "INFO", text = table.concat(text) }
+
+		if uniform then
+			-- one colour for the whole line needs no segments
+			line.color = parts[1] and parts[1].color
+		else
+			-- MsgC emits one chunk per colour, so a tagged line arrives in
+			-- pieces. Keeping them is the only way the site can show it the way
+			-- the server console does.
+			line.parts = parts
+		end
+
+		push(line)
 	end
 
 	local function flushPending()
-		if pending == "" or SysTime() - pendingSince < PENDING_MAX_AGE then return end
+		if #pending == 0 or SysTime() - pendingSince < PENDING_MAX_AGE then return end
 
-		local text, level, color = pending, pendingLevel, pendingColor
-		pending = ""
-		emit(text, level, color)
+		local parts, level = pending, pendingLevel
+		pending, pendingLevel = {}, nil
+		emit(parts, level)
 	end
 
 	hook.Add("EngineSpew", "metaconcord.ConsolePayload", function(logType, logMsg, logGroup, logLevel, r, g, b)
@@ -76,21 +109,27 @@ function ConsolePayload:__call(socket)
 		-- spew arrives as a stream of chunks, not lines: one chunk can hold
 		-- several newlines or none at all, so whole lines are cut out here and
 		-- the remainder waits for the chunk that finishes it
-		local buffer = pending .. logMsg
 		local start = 1
-		pending = ""
-
 		while true do
-			local nl = buffer:find("\n", start, true)
+			local nl = logMsg:find("\n", start, true)
 			if not nl then break end
 
-			emit(buffer:sub(start, nl - 1), level, color)
+			local piece = logMsg:sub(start, nl - 1)
+			if #piece > 0 then
+				pending[#pending + 1] = { text = piece, color = color }
+			end
+
+			local parts, lineLevel = pending, worst(pendingLevel, level)
+			pending, pendingLevel = {}, nil
+			emit(parts, lineLevel)
+
 			start = nl + 1
 		end
 
-		if start <= #buffer then
-			pending = buffer:sub(start)
-			pendingLevel, pendingColor, pendingSince = level, color, SysTime()
+		if start <= #logMsg then
+			pending[#pending + 1] = { text = logMsg:sub(start), color = color }
+			pendingLevel = worst(pendingLevel, level)
+			pendingSince = SysTime()
 		end
 	end)
 
