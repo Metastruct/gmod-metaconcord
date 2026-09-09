@@ -8,7 +8,33 @@
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::Sender;
+
+/// One gserv at a time, whoever asked for it.
+///
+/// Discord and an in-game command both reach this, and two `qu` runs pulling
+/// the same repos at once would fight. The guard lives here rather than in any
+/// one caller so it holds no matter how many entry points there are.
+static RUNNING: AtomicBool = AtomicBool::new(false);
+
+pub struct RunGuard;
+
+impl RunGuard {
+    /// None when a run is already in flight.
+    pub fn acquire() -> Option<RunGuard> {
+        RUNNING
+            .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+            .ok()
+            .map(|_| RunGuard)
+    }
+}
+
+impl Drop for RunGuard {
+    fn drop(&mut self) {
+        RUNNING.store(false, Ordering::Release);
+    }
+}
 
 
 /// Everything the bridge is allowed to ask for. `Gserv.ts` offers the same set,
@@ -288,6 +314,18 @@ mod tests {
 
         assert!(resolve_in(Some(OsString::from(&root)), None).is_err());
         let _ = std::fs::remove_dir_all(&root);
+    }
+
+    /// Discord and an in-game command are separate callers, so the guard has to
+    /// refuse the second one rather than let two runs touch the same repos.
+    #[test]
+    fn only_one_run_is_allowed_at_a_time() {
+        let first = RunGuard::acquire().expect("nothing should be running");
+        assert!(RunGuard::acquire().is_none(), "a second run should be refused");
+
+        drop(first);
+        let again = RunGuard::acquire().expect("the guard should free up");
+        drop(again);
     }
 
     /// A host with no gserv must terminate the run exactly once and never look
