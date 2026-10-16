@@ -170,6 +170,8 @@ pub fn run(tokens: Vec<String>, tx: Sender<Output>) {
             libc::sigemptyset(&mut mask);
             libc::sigprocmask(libc::SIG_SETMASK, &mask, std::ptr::null_mut());
 
+            libc::syscall(libc::SYS_close_range, 3u32, u32::MAX, libc::CLOSE_RANGE_CLOEXEC);
+
             Ok(())
         });
     }
@@ -451,5 +453,35 @@ mod exec_tests {
 
         assert_ne!(ignored_mask(false) & sigchld, 0, "the ignore should be inherited");
         assert_eq!(ignored_mask(true) & sigchld, 0, "pre_exec should have cleared it");
+    }
+
+    #[test]
+    fn pre_exec_keeps_inherited_fds_from_reaching_the_child() {
+        use std::os::unix::process::CommandExt;
+
+        let fd = unsafe { libc::open(c"/dev/null".as_ptr(), libc::O_RDONLY) };
+        assert!(fd > 2);
+
+        let child_fds = |mark: bool| {
+            let mut c = Command::new("ls");
+            c.arg("/proc/self/fd").stdout(Stdio::piped());
+            unsafe {
+                c.pre_exec(move || {
+                    if mark {
+                        libc::syscall(libc::SYS_close_range, 3u32, u32::MAX, libc::CLOSE_RANGE_CLOEXEC);
+                    }
+                    Ok(())
+                });
+            }
+            let out = c.output().unwrap();
+            String::from_utf8_lossy(&out.stdout).lines().map(str::to_owned).collect::<Vec<_>>()
+        };
+
+        let leaked = child_fds(false);
+        let kept = child_fds(true);
+        unsafe { libc::close(fd) };
+
+        assert!(leaked.contains(&fd.to_string()), "the fd should leak without the mark");
+        assert!(!kept.contains(&fd.to_string()), "pre_exec should have kept it from the child");
     }
 }
